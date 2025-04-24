@@ -66,39 +66,72 @@
       ></span>
     </div>
     <script type="module" src="./src/main.ts"></script>
-    <div id="inputs-container">
-      <input
-        type="file"
-        id="file-input"
-        accept=".ifc,.frag"
-        style="width: 11rem"
-      />
-      <button id="load-pa">Load PA</button>
-      <button id="load-bb">Load BB</button>
-      <label class="input-label" id="angle-label">
-        IFC rotation: <span id="angle">0</span>°
-      </label>
-      <input
-        id="angle-slider"
-        type="range"
-        min="0"
-        max="360"
-        step="1"
-        value="0"
-        oninput="document.getElementById('angle').textContent = this.value"
-      />
-      <label class="input-label" id="heigh-label">
-        IFC elev: <span id="height">0</span> mts
-      </label>
-      <input
-        id="height-slider"
-        type="range"
-        min="-100"
-        max="100"
-        step="01"
-        value="0"
-      />
-      <button id="remove-all">Remove All!</button>
+    <div id="tools">
+      <div id="inputs-container">
+        <input
+          type="file"
+          id="file-input"
+          accept=".ifc,.frag"
+          style="width: 11rem"
+        />
+        <!-- <button id="load-pa">Load PA</button>
+      <button id="load-bb">Load BB</button> -->
+        <div
+          id="model-tools"
+          style="display: none; flex-direction: column; gap: 0.5rem"
+        >
+          <label class="input-label" id="angle-label">
+            IFC rotation: <span id="angle">0</span>°
+          </label>
+          <input
+            id="angle-slider"
+            type="range"
+            min="0"
+            max="360"
+            step="1"
+            value="0"
+            oninput="document.getElementById('angle').textContent = this.value"
+          />
+          <label class="input-label" id="heigh-label">
+            IFC elev: <span id="height">0</span> mts
+          </label>
+          <input
+            id="height-slider"
+            type="range"
+            min="-100"
+            max="100"
+            step="01"
+            value="0"
+          />
+          <input
+            type="number"
+            id="x-input"
+            step="0.00000000001"
+            placeholder="X (Lng)"
+          />
+          <input
+            type="number"
+            id="y-input"
+            step="0.00000000001"
+            placeholder="Y (Lat)"
+          />
+          <div>
+            <button>Relocate</button>
+            <button id="download-frag">Download</button>
+            <button id="remove-all">X</button>
+          </div>
+        </div>
+      </div>
+      <button id="toggle-button">⚙️</button>
+      <script>
+        document
+          .getElementById('toggle-button')
+          .addEventListener('click', () => {
+            const inputsContainer = document.getElementById('inputs-container');
+            inputsContainer.style.display =
+              inputsContainer.style.display === 'none' ? 'flex' : 'none';
+          });
+      </script>
     </div>
   </body>
 </html>

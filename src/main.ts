@@ -20,40 +20,6 @@ interface Coords {
   lat: number;
 }
 
-interface Location {
-  coords: Coords;
-  angle: number;
-  elevation: number;
-}
-
-interface Bldg {
-  id: string;
-  name: string;
-  location: Location;
-}
-
-// Hardcoding some buildings 🏢
-const buildings: Bldg[] = [
-  {
-    id: 'BB',
-    name: 'Bronson Substation',
-    location: {
-      coords: { lng: -75.69185223430395, lat: 45.38636213794322 },
-      angle: 0,
-      elevation: 3,
-    },
-  },
-  {
-    id: 'PA',
-    name: 'Paterson Hall',
-    location: {
-      coords: { lng: -75.69835199446455, lat: 45.38152527897171 },
-      angle: 35,
-      elevation: 5,
-    },
-  },
-];
-
 // 🌎 Setting up a Simple Scene
 const components = new OBC.Components();
 
@@ -103,26 +69,11 @@ world.camera.controls.addEventListener('update', () => fragments.update());
 // 📂 Loading Fragments Models
 let models: FRAGS.FragmentsModel[] = [];
 let model: FRAGS.FragmentsModel;
+let bbox: THREE.Box3;
 
 const mouse = new THREE.Vector2();
-
-const path = '../resources/frags/';
-const loadFragmentFile = async (id: string) => {
-  world.camera.updateAspect();
-  const url = `${path}${id}.frag`;
-  const file = await fetch(url);
-  const mapFile = await fetch(url);
-  const buffer = await file.arrayBuffer();
-  const mapBuffer = await mapFile.arrayBuffer();
-  const _model = await fragments.load(buffer, { modelId: id });
-  const mapModel = await fragments.load(mapBuffer, { modelId: `${id}@map` });
-  mapScene.add(mapModel.object);
-  // world.scene.three.add(model.object);
-  models.push(_model);
-  if (!_model.modelId.endsWith('@map')) model = _model;
-};
-
 bimContainer.addEventListener('click', async (event) => {
+  if (!model) return;
   model.resetHighlight();
   mouse.x = event.clientX;
   mouse.y = event.clientY;
@@ -175,22 +126,23 @@ const getModelsIds = () => {
 
 let holdPopup = false;
 const fileInput = document.getElementById('file-input') as HTMLInputElement;
+
 fileInput.addEventListener('change', async (event) => {
   console.log('File input changed: ', event);
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;
   console.log('File: ', file);
   const buffer = await file.arrayBuffer();
-  const model = await fragments.load(buffer, {
-    modelId: file.name,
-  });
-  models.push(model);
-  model.useCamera(currentCamera);
-  world.scene.three.add(model.object);
-  fragments.update(true);
-
-  maplibre.getCanvas().style.cursor = 'crosshair';
-  holdPopup = true;
+  if (file.name.endsWith('.ifc')) {
+    model = await convertIFC(file);
+  }
+  if (file.name.endsWith('.frag')) {
+    model = await fragments.load(buffer, {
+      modelId: file.name.replace('.frag', ''),
+    });
+  }
+  if (!model) return;
+  loadModel(model);
 });
 
 const angleSlider = document.getElementById('angle-slider') as HTMLInputElement;
@@ -207,10 +159,33 @@ heightSlider.addEventListener('input', () => {
   dynamicAltitude = parseFloat(heightSlider.value);
   altitudeLabel.textContent = dynamicAltitude.toString();
 });
+const modelTools = document.getElementById('model-tools') as HTMLButtonElement;
+const downloadFrag = document.getElementById(
+  'download-frag'
+) as HTMLButtonElement;
+
+downloadFrag.addEventListener('click', async () => {
+  onDownloadModel();
+});
+
+const onDownloadModel = async () => {
+  const buffer = await model.getBuffer(false);
+  const result = { name: model.modelId, buffer };
+  if (result) {
+    const { name, buffer } = result;
+    const a = document.createElement('a');
+    const file = new File([buffer], `${name}.frag`);
+    a.href = URL.createObjectURL(file);
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+};
 
 const clearUiInputs = () => {
   if (angleSlider) angleSlider.value = '0';
   if (heightSlider) heightSlider.value = '0';
+  modelTools.style.display = 'none';
 };
 
 /* 🛡️ Prevent Memory Leaks
@@ -219,6 +194,7 @@ const disposeModels = async (ids = getModelsIds()) => {
   const promises = [];
   models = [];
   clearUiInputs();
+  removeModelFromMap();
 
   for (const id of ids) promises.push(fragments.disposeModel(id));
   for (const id of ids) promises.push(fragments.disposeModel(`${id}@map`));
@@ -241,10 +217,12 @@ const maplibre = new maplibregl.Map({
   doubleClickZoom: false,
 });
 
+/*
 let building = buildings.find((building) => building.id === 'PA');
 if (!building || !building.location) {
   throw new Error("Building with id 'AA' not found or location is undefined.");
 }
+  */
 
 async function setMarker(coords: Coords) {
   const source: SourceSpecification = {
@@ -285,37 +263,77 @@ async function setMarker(coords: Coords) {
   console.log('Setting new marker: ', coords, layer, source);
 }
 
-const removeModelFromMap = (id: string) => {
-  console.log('Removing model from map: ', id);
+const removeModelFromMap = () => {
   maplibre.removeLayer('3d-model');
   maplibre.removeLayer('places-layer');
   maplibre.removeSource('places-source');
   maplibre.removeImage('custom-marker');
 };
 
-const ids = getModelsIds();
-const onLoadModel = async (id: string) => {
-  building = buildings.find((building) => building.id === id);
-  if (!building) return;
-  const { angle, coords, elevation } = building.location;
-  const trueNorthInRadians = (angle ?? 0) * (Math.PI / 180);
-  mapScene.rotateY(trueNorthInRadians);
-  mapScene.position.setY(elevation ?? 0);
+// const ids = getModelsIds();
+const loadModel = async (model: FRAGS.FragmentsModel) => {
+  const modelId = model.modelId;
+  console.log('Loading model: ', modelId);
 
-  if (ids.includes(id)) {
-    await disposeModels([id]);
-    removeModelFromMap('3d-model');
-  } else {
-    setMarker(coords);
-    loadModel(coords);
-    await loadFragmentFile(id);
+  bbox = model.box;
+  await world.camera.controls.fitToBox(bbox, false);
+
+  models.push(model);
+  model.useCamera(currentCamera);
+  world.scene.three.add(model.object);
+  const mapBuffer = await model.getBuffer();
+  const mapModel = await fragments.load(mapBuffer, {
+    modelId: `${modelId}@map`,
+  });
+  mapScene.add(mapModel.object);
+
+  fragments.update(true);
+  maplibre.getCanvas().style.cursor = 'crosshair';
+  holdPopup = true;
+
+  /*
+  const items = await model.getItemsOfCategory('IFCMAPCONVERSION');
+  const ifcSite = await model.getItemsOfCategory('IFCSITE');
+
+  const localIds = (
+    await Promise.all(
+      items.map((item) => {
+        console.log('Item: ', item);
+        return item.getLocalId();
+      })
+    )
+  ).filter((localId) => localId !== null) as number[];
+
+  for (const localId of localIds) {
+    const data = await model.getItemsData([localId], {
+      relations: {
+        attribute: {
+          attributes: true,
+          relations: true,
+        },
+      },
+    });
+    console.log('Data: ', data);
   }
+
+  console.log('IFC SITE: ', items);
+
+  for (const [_, data] of Object.entries(items)) {
+    console.log('Data: ', data);
+    if (!data) continue;
+
+    const { RefLatitude, RefLongitude, RefElevation } = data;
+
+    if (!RefLatitude || !RefLongitude || !RefElevation) continue;
+
+    console.log('RefLatitude: ', RefLatitude);
+    console.log('RefLongitude: ', RefLongitude);
+    // const latitude = this.convertDMStoDecimal(RefLatitude);
+    // const longitude = this.convertDMStoDecimal(RefLongitude);
+  }
+  */
 };
 
-const loadPA = document.getElementById('load-pa') as HTMLButtonElement;
-loadPA.addEventListener('click', async () => onLoadModel('PA'));
-const loadBB = document.getElementById('load-bb') as HTMLButtonElement;
-loadBB.addEventListener('click', async () => onLoadModel('BB'));
 const removeAll = document.getElementById('remove-all') as HTMLButtonElement;
 removeAll.addEventListener('click', async () => disposeModels());
 
@@ -329,7 +347,11 @@ stats.dom.style.zIndex = 'unset';
 world.renderer.onBeforeUpdate.add(() => stats.begin());
 world.renderer.onAfterUpdate.add(() => stats.end());
 
-const { coords } = building.location;
+// const { coords } = building.location;
+let coords = {
+  lng: -75.69835199446455,
+  lat: 45.38152527897171,
+};
 
 let sceneOrigin = new maplibregl.LngLat(coords.lng, coords.lat);
 let modelLocation = new maplibregl.LngLat(coords.lng, coords.lat);
@@ -358,10 +380,11 @@ fragments.models.list.onItemSet.add(async ({ value: model }) => {
 let bimCamera = world.camera.three;
 let currentCamera = bimCamera;
 
-async function loadModel(coords: Coords) {
-  if (!building) return;
+async function loadModelToMap(coords: Coords) {
+  // if (!building) return;
   mapElevation = maplibre.queryTerrainElevation(coords) ?? 0;
-  modelElevation = building?.location.elevation + mapElevation;
+  // modelElevation = building?.location.elevation + mapElevation;
+  modelElevation = mapElevation;
   const { lng, lat } = coords;
   modelLocation = new maplibregl.LngLat(lng, lat);
   sceneOrigin = new maplibregl.LngLat(lng, lat);
@@ -385,7 +408,7 @@ async function loadModel(coords: Coords) {
   });
   bimContainer.addEventListener('mouseleave', () => {
     world.camera.controls.setLookAt(183, 50, -102, 27, -52, -11);
-    world.camera.controls.fitToBox(bbox, false);
+    if (bbox) world.camera.controls.fitToBox(bbox, false);
     fragments.update();
   });
 
@@ -397,9 +420,6 @@ async function loadModel(coords: Coords) {
     onAdd() {
       layerRenderer.autoClear = false;
     },
-
-    // RAYCASTING: https://jsfiddle.net/5vpL7ays/7/
-    // RAYCASTING: https://stackoverflow.com/questions/59163141/raycast-in-three-js-with-only-a-projection-matrix/61642776#61642776
 
     render(_, matrix) {
       const angleValue = angleSlider.value;
@@ -471,15 +491,6 @@ async function loadModel(coords: Coords) {
 
   maplibre.addLayer(customLayer);
 
-  let bbox: THREE.Box3;
-
-  fragments.onModelLoaded.add(async (model) => {
-    if (model.box) {
-      bbox = model.box;
-      await world.camera.controls.fitToBox(bbox, false);
-    }
-  });
-
   if (!maplibre.getLayer('3d-model')) maplibre.addLayer(customLayer);
 
   maplibre.on('mouseenter', 'places-layer', (e) => {
@@ -524,9 +535,10 @@ async function loadModel(coords: Coords) {
 
 maplibre.on('dblclick', (e) => {
   if (holdPopup) {
-    loadModel(e.lngLat);
+    loadModelToMap(e.lngLat);
     setMarker(e.lngLat);
     popup.remove();
+    modelTools.style.display = 'flex';
 
     maplibre.getCanvas().style.cursor = '';
 
@@ -574,47 +586,29 @@ proj4.defs(
 );
 
 // Sample UTM coordinate in Ottawa (EPSG:26918)
-const utmCoord = [445325.701, 5025571.622]; // [Easting, Northing]
+// const utmCoord = [445325.701, 5025571.622]; // [Easting, Northing] Paterson Hall
+const utmCoord = [445518.6, 5026017.2]; // [Easting, Northing] Center of Carleton University
 
 // Transform to WGS84 (EPSG:4326)
 const wgs84Coord = proj4(`EPSG:269${zone}`, 'EPSG:4326', utmCoord);
-console.log(`Longitude: ${lng}, UTM Zone: ${zone} → EPSG:269${zone}`);
-console.log('UTM Coords:', utmCoord, 'WGS84 Coordinates', wgs84Coord); // Should output: [-75.69835199446455, 45.38152527897171] Paterson Hall
+const crsReport = `Current map longitude: ${lng}, 
+UTM Zone: ${zone} → EPSG:269${zone} 
+UTM Coords: ${utmCoord} 
+WGS84 Coordinates:, ${wgs84Coord}`;
+// console.log(crsReport);
 
-// EXTRACTING SITE COORDINATES 🌎🌎🌎
-/* 
-for (const [_, model] of fragments.groups.entries()) {
-  const properties = await model.getAllPropertiesOfType(WEBIFC.IFCSITE);
+const serializer = new FRAGS.IfcImporter();
+serializer.wasm = { absolute: true, path: 'https://unpkg.com/web-ifc@0.0.68/' };
+let fragmentBytes: ArrayBuffer | null = null;
+let onConversionFinish = () => {};
 
-  if (!properties) continue;
-
-  for (const [_, data] of Object.entries(properties)) {
-    if (!data) continue;
-
-    const { RefLatitude, RefLongitude, RefElevation } = data;
-
-    if (!RefLatitude || !RefLongitude || !RefElevation) continue;
-
-    const latitude = this.convertDMStoDecimal(RefLatitude);
-    const longitude = this.convertDMStoDecimal(RefLongitude);
-    // const latitude = 45.38476465194293;
-    // const longitude = -75.69496396358156;
-    const altitude = 0;
-
-    this.onMapRequested.trigger({
-      coords: [longitude, latitude],
-      altitude: RefElevation.value,
-      altitude,
-    });
-  }
-}
-
-return undefined;
+export const convertIFC = async (file: File) => {
+  const ifcBuffer = await file.arrayBuffer();
+  const ifcBytes = new Uint8Array(ifcBuffer);
+  fragmentBytes = await serializer.process({ bytes: ifcBytes });
+  if (!fragmentBytes) return;
+  const modelId = file.name.replace('.ifc', '');
+  const model = await fragments.load(fragmentBytes, { modelId });
+  onConversionFinish();
+  return model;
 };
-
-convertDMStoDecimal(dms: { value: number[] }): number {
-const [degrees, minutes, seconds, milliseconds] = dms.value;
-return degrees + minutes / 60 + (seconds + milliseconds / 1000000) / 3600;
-}
-}
-*/
