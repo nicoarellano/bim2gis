@@ -4,7 +4,6 @@
 
 import * as THREE from 'three';
 import * as OBC from '@thatopen/components';
-import * as BUI from '@thatopen/ui';
 import * as FRAGS from '@thatopen/fragments';
 import Stats from 'stats.js';
 // You have to import * as FRAGS from "@thatopen/fragments"
@@ -36,15 +35,6 @@ interface Bldg {
 // Hardcoding some buildings 🏢
 const buildings: Bldg[] = [
   {
-    id: 'AA',
-    name: 'Architecture Building',
-    location: {
-      coords: { lng: -75.69765955209732, lat: 45.38389669263273 },
-      angle: 0,
-      elevation: -1,
-    },
-  },
-  {
     id: 'BB',
     name: 'Bronson Substation',
     location: {
@@ -53,8 +43,6 @@ const buildings: Bldg[] = [
       elevation: 3,
     },
   },
-  // { id: 'CB', name: 'Canal Building' },
-  // { id: 'NB', name: 'Nicol Building' },
   {
     id: 'PA',
     name: 'Paterson Hall',
@@ -64,7 +52,6 @@ const buildings: Bldg[] = [
       elevation: 5,
     },
   },
-  // { id: 'VS', name: 'VISIM Building' },
 ];
 
 // 🌎 Setting up a Simple Scene
@@ -238,17 +225,13 @@ const disposeModels = async (ids = getModelsIds()) => {
   await Promise.all(promises);
 };
 
-/* 🧩 Adding User Interface 
-  We will use the `@thatopen/ui` library to add some simple and cool UI elements to our app. First, we need to call the `init` method of the `BUI.Manager` class to initialize the library:
-*/
-
-BUI.Manager.init();
+// MAPLIBRE 🌎🌎
 
 const maplibre = new maplibregl.Map({
   container: 'map-container', // container id
   style: '../resources/styles/satellite.json',
-  center: buildings[0].location.coords,
-  zoom: 15.5,
+  center: [-75.69765955209732, 45.38389669263273],
+  zoom: 15,
   pitch: 45,
   bearing: 0,
   canvasContextAttributes: { antialias: true },
@@ -257,7 +240,7 @@ const maplibre = new maplibregl.Map({
   doubleClickZoom: false,
 });
 
-let building = buildings.find((building) => building.id === 'AA');
+let building = buildings.find((building) => building.id === 'PA');
 if (!building || !building.location) {
   throw new Error("Building with id 'AA' not found or location is undefined.");
 }
@@ -309,116 +292,31 @@ const removeModelFromMap = (id: string) => {
   maplibre.removeImage('custom-marker');
 };
 
-const [panel, updatePanel] = BUI.Component.create<BUI.PanelSection, any>(
-  (_) => {
-    const ids = getModelsIds();
+const ids = getModelsIds();
+const onLoadModel = async (id: string) => {
+  building = buildings.find((building) => building.id === id);
+  if (!building) return;
+  const { angle, coords, elevation } = building.location;
+  const trueNorthInRadians = (angle ?? 0) * (Math.PI / 180);
+  mapScene.rotateY(trueNorthInRadians);
+  mapScene.position.setY(elevation ?? 0);
 
-    const onLoadModel = async ({ target }: { target: BUI.Button }) => {
-      const id = target.getAttribute('data-name');
-      if (!id) return;
-      building = buildings.find((building) => building.id === id);
-      if (!building) return;
-      const { angle, coords, elevation } = building.location;
-      const trueNorthInRadians = (angle ?? 0) * (Math.PI / 180);
-      mapScene.rotateY(trueNorthInRadians);
-      mapScene.position.setY(elevation ?? 0);
+  if (ids.includes(id)) {
+    await disposeModels([id]);
+    removeModelFromMap('3d-model');
+  } else {
+    setMarker(coords);
+    loadModel(coords);
+    await loadFragmentFile(id);
+  }
+};
 
-      target.loading = true;
-      if (ids.includes(id)) {
-        await disposeModels([id]);
-        removeModelFromMap('3d-model');
-      } else {
-        setMarker(coords);
-        loadModel(coords);
-        await loadFragmentFile(id);
-      }
-      target.loading = false;
-    };
-
-    const onDisposeModels = () => {
-      disposeModels();
-      models = [];
-    };
-
-    const onDownloadModel = async ({ target }: { target: BUI.Button }) => {
-      const name = target.getAttribute('data-name');
-      if (!name) return;
-      const id = name;
-      target.loading = true;
-      const result = await getBinaryData(id);
-      if (result) {
-        const { name, buffer } = result;
-
-        const a = document.createElement('a');
-        const file = new File([buffer], `${name}.frag`);
-        a.href = URL.createObjectURL(file);
-        a.download = file.name;
-        a.click();
-        URL.revokeObjectURL(a.href);
-      }
-      target.loading = false;
-    };
-
-    function onAddToMap() {
-      console.log('Add to map');
-    }
-
-    return BUI.html`
-      <bim-panel id="controls-panel" active label="Fragments Models" class="options-menu">
-        <bim-panel-section label="Controls">
-          ${buildings.map(({ id, name }) => {
-            const isLoaded = ids.some((modelId) => modelId.includes(id));
-            const label = isLoaded ? `Remove ${name}` : `Load ${name}`;
-            return BUI.html`
-              <div style="display: flex; gap: 0.25rem">
-                <bim-button data-name=${id} label=${label} @click=${onLoadModel}></bim-button>
-                ${
-                  isLoaded
-                    ? BUI.html`<bim-button data-name=${id} label="Download" @click=${onDownloadModel}></bim-button>`
-                    : null
-                }
-              </div>
-            `;
-          })}
-          <!-- <div style="display: flex; gap: 0.25rem">
-                <bim-button data-name='MAP' label='Load in Map' icon='lucide:map-pinned' @click=${onAddToMap}></bim-button>
-              </div> -->
-          <bim-button ?disabled=${
-            ids.length === 0
-          } label="Remove All" @click=${onDisposeModels}></bim-button>
-        </bim-panel-section>
-      </bim-panel>
-    `;
-  },
-  {}
-);
-
-fragments.models.list.onItemSet.add(() => updatePanel());
-fragments.models.list.onItemDeleted.add(() => updatePanel());
-
-document.body.append(panel);
-
-/* MD
-  And we will make some logic that adds a button to the screen when the user is visiting our app from their phone, allowing to show or hide the menu. Otherwise, the menu would make the app unusable.
-*/
-
-const button = BUI.Component.create<BUI.PanelSection>(() => {
-  const onClick = () => {
-    if (panel.classList.contains('options-menu-visible')) {
-      panel.classList.remove('options-menu-visible');
-    } else {
-      panel.classList.add('options-menu-visible');
-    }
-  };
-
-  return BUI.html`
-    <bim-button class="phone-menu-toggler" icon="solar:settings-bold"
-      @click=${onClick}>
-    </bim-button>
-  `;
-});
-
-document.body.append(button);
+const loadPA = document.getElementById('load-pa') as HTMLButtonElement;
+loadPA.addEventListener('click', async () => onLoadModel('PA'));
+const loadBB = document.getElementById('load-bb') as HTMLButtonElement;
+loadBB.addEventListener('click', async () => onLoadModel('BB'));
+const removeAll = document.getElementById('remove-all') as HTMLButtonElement;
+removeAll.addEventListener('click', async () => disposeModels());
 
 // ⏱️ Measuring the performance
 
@@ -662,6 +560,10 @@ function stopResizing(): void {
   document.removeEventListener('mouseup', stopResizing);
 }
 
+// PROJ4 to convert between coordinate systems
+
+// PROJ4 Definitions
+// Ottawa UTM (EPSG:26918)
 proj4.defs(
   'EPSG:26918',
   '+proj=utm +zone=18 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs'
@@ -677,4 +579,42 @@ const utmCoord = [13567764.134119328, 183.22237601293259]; // [Easting, Northing
 
 // Transform to WGS84 (EPSG:4326)
 const wgs84Coord = proj4('EPSG:26918', 'EPSG:3857', utmCoord);
-console.log(wgs84Coord); // Should output: { lng: -75.69835199446455, lat: 45.38152527897171 } Paterson Hall
+// console.log(wgs84Coord); // Should output: { lng: -75.69835199446455, lat: 45.38152527897171 } Paterson Hall
+
+// EXTRACTING SITE COORDINATES 🌎🌎🌎
+/* 
+for (const [_, model] of fragments.groups.entries()) {
+  const properties = await model.getAllPropertiesOfType(WEBIFC.IFCSITE);
+
+  if (!properties) continue;
+
+  for (const [_, data] of Object.entries(properties)) {
+    if (!data) continue;
+
+    const { RefLatitude, RefLongitude, RefElevation } = data;
+
+    if (!RefLatitude || !RefLongitude || !RefElevation) continue;
+
+    const latitude = this.convertDMStoDecimal(RefLatitude);
+    const longitude = this.convertDMStoDecimal(RefLongitude);
+    // const latitude = 45.38476465194293;
+    // const longitude = -75.69496396358156;
+    const altitude = 0;
+
+    this.onMapRequested.trigger({
+      coords: [longitude, latitude],
+      altitude: RefElevation.value,
+      altitude,
+    });
+  }
+}
+
+return undefined;
+};
+
+convertDMStoDecimal(dms: { value: number[] }): number {
+const [degrees, minutes, seconds, milliseconds] = dms.value;
+return degrees + minutes / 60 + (seconds + milliseconds / 1000000) / 3600;
+}
+}
+*/

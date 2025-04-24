@@ -67,14 +67,14 @@
     </div>
     <script type="module" src="./src/main.ts"></script>
     <div id="inputs-container">
-      <label class="input-label" for="file-input">Upload BIM File:</label>
       <input
         type="file"
         id="file-input"
         accept=".ifc,.frag"
         style="width: 11rem"
       />
-
+      <button id="load-pa">Load PA</button>
+      <button id="load-bb">Load BB</button>
       <label class="input-label" id="angle-label">
         IFC rotation: <span id="angle">0</span>°
       </label>
@@ -98,6 +98,7 @@
         step="01"
         value="0"
       />
+      <button id="remove-all">Remove All!</button>
     </div>
   </body>
 </html>

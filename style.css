@@ -28,7 +28,7 @@ body {
 }
 
 #inputs-container {
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.8);
   position: absolute;
   bottom: 1rem;
   right: 0.5rem;
@@ -40,7 +40,7 @@ body {
   z-index: 10;
   padding: 0.5rem;
   border-radius: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.8rem;
   margin: 0.3rem;
   color: black;
   font-weight: bold;
