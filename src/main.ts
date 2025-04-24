@@ -230,7 +230,8 @@ const disposeModels = async (ids = getModelsIds()) => {
 const maplibre = new maplibregl.Map({
   container: 'map-container', // container id
   style: '../resources/styles/satellite.json',
-  center: [-75.69765955209732, 45.38389669263273],
+  center: [-75.69765955209732, 45.38389669263273], // AA Carleton
+  // center: [-123.11, 49.257], // Vancouver
   zoom: 15,
   pitch: 45,
   bearing: 0,
@@ -563,23 +564,22 @@ function stopResizing(): void {
 // PROJ4 to convert between coordinate systems
 
 // PROJ4 Definitions
-// Ottawa UTM (EPSG:26918)
+const currentCoord = maplibre.getCenter();
+const { lng } = currentCoord;
+const zone = Math.floor((lng + 180) / 6) + 1;
+
 proj4.defs(
-  'EPSG:26918',
-  '+proj=utm +zone=18 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs'
-);
-// GOOGLE MERCATOR or just 'GOOGLE'
-proj4.defs(
-  'EPSG:900913',
-  '+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs +type=crs'
+  `EPSG:269${zone}`,
+  `+proj=utm +zone=${zone} +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs`
 );
 
 // Sample UTM coordinate in Ottawa (EPSG:26918)
-const utmCoord = [13567764.134119328, 183.22237601293259]; // [Easting, Northing]
+const utmCoord = [445325.701, 5025571.622]; // [Easting, Northing]
 
 // Transform to WGS84 (EPSG:4326)
-const wgs84Coord = proj4('EPSG:26918', 'EPSG:3857', utmCoord);
-// console.log(wgs84Coord); // Should output: { lng: -75.69835199446455, lat: 45.38152527897171 } Paterson Hall
+const wgs84Coord = proj4(`EPSG:269${zone}`, 'EPSG:4326', utmCoord);
+console.log(`Longitude: ${lng}, UTM Zone: ${zone} → EPSG:269${zone}`);
+console.log('UTM Coords:', utmCoord, 'WGS84 Coordinates', wgs84Coord); // Should output: [-75.69835199446455, 45.38152527897171] Paterson Hall
 
 // EXTRACTING SITE COORDINATES 🌎🌎🌎
 /* 
