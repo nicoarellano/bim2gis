@@ -1,0 +1,82 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  overflow: hidden;
+}
+
+.full-screen {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.bim {
+  width: 50vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#map-container {
+  width: 50vw;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  right: 0;
+  overflow: hidden;
+}
+
+#inputs-container {
+  background-color: rgba(255, 255, 255, 0.5);
+  position: absolute;
+  bottom: 1rem;
+  right: 0.5rem;
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  margin: 0.3rem;
+  color: black;
+  font-weight: bold;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.options-menu {
+  position: fixed;
+  min-width: unset;
+  top: 5px;
+  right: 5px;
+  max-height: calc(100vh - 10px);
+  max-width: 15rem;
+}
+
+.phone-menu-toggler {
+  visibility: hidden;
+}
+
+@media (max-width: 480px) {
+  .options-menu {
+    visibility: hidden;
+    bottom: 5px;
+    left: 5px;
+    max-width: none;
+  }
+
+  .options-menu-visible {
+    visibility: visible;
+  }
+
+  .phone-menu-toggler {
+    visibility: visible;
+    position: fixed;
+    top: 5px;
+    right: 5px;
+  }
+}
