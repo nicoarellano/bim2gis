@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <link rel="icon" href="../../resources/favicon.ico" type="image/x-icon" />
+    <title>CIMS Maplibre example</title>
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+
+  <body>
+    <div class="bim" id="bim-container" style="width: 50%"></div>
+    <div id="map-container" style="width: 50%"></div>
+    <div
+      id="canvas-slider"
+      style="
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 49.9%;
+        width: 5px;
+        background-color: rgba(0, 0, 0, 0.5);
+        cursor: ew-resize;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      "
+    >
+      <span
+        style="
+          width: 3px;
+          height: 3px;
+          background-color: white;
+          border-radius: 50%;
+          margin: 2px;
+        "
+      ></span>
+      <span
+        style="
+          width: 3px;
+          height: 3px;
+          background-color: white;
+          border-radius: 50%;
+          margin: 2px;
+        "
+      ></span>
+      <span
+        style="
+          width: 3px;
+          height: 3px;
+          background-color: white;
+          border-radius: 50%;
+          margin: 2px;
+        "
+      ></span>
+    </div>
+    <div id="tools">
+      <div id="inputs-container">
+        <input
+          type="file"
+          id="file-input"
+          accept=".ifc,.frag"
+          style="width: 11rem"
+        />
+        <!-- <button id="load-pa">Load PA</button>
+        <button id="load-bb">Load BB</button> -->
+        <div
+          id="model-tools"
+          style="display: none; flex-direction: column; gap: 0.5rem"
+        >
+          <label class="input-label" id="angle-label">
+            IFC rotation: <span id="angle">0</span>°
+          </label>
+          <input
+            id="angle-slider"
+            type="range"
+            min="0"
+            max="360"
+            step="1"
+            value="0"
+            oninput="document.getElementById('angle').textContent = this.value"
+          />
+          <label class="input-label" id="heigh-label">
+            IFC elev: <span id="height">0</span> mts
+          </label>
+          <input
+            id="height-slider"
+            type="range"
+            min="-100"
+            max="100"
+            step="01"
+            value="0"
+          />
+          <input
+            type="number"
+            id="x-input"
+            step="0.00000000001"
+            placeholder="X (Lng)"
+          />
+          <input
+            type="number"
+            id="y-input"
+            step="0.00000000001"
+            placeholder="Y (Lat)"
+          />
+          <div>
+            <button>Relocate</button>
+            <button id="download-frag">Download</button>
+            <button id="remove-all">X</button>
+          </div>
+        </div>
+      </div>
+      <button id="toggle-button">⚙️</button>
+      <script>
+        document
+          .getElementById('toggle-button')
+          .addEventListener('click', () => {
+            const inputsContainer = document.getElementById('inputs-container');
+            inputsContainer.style.display =
+              inputsContainer.style.display === 'none' ? 'flex' : 'none';
+          });
+      </script>
+    </div>
+    <body>
+      <div class="map-toolbar">
+        <a class="button circular" id="map-view" title="Map view">
+          <i data-lucide="map" style="color: white"></i>
+        </a>
+        <a class="button circular" id="home" title="Go to home" href="../../">
+          <i data-lucide="home" style="color: white"></i>
+        </a>
+      </div>
+      <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+      <script>
+        lucide.createIcons();
+      </script>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

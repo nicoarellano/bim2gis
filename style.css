@@ -1,8 +1,50 @@
+html,
 body {
+  height: 100%;
+  margin: 0;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
   font-family: 'Plus Jakarta Sans', sans-serif;
   overflow: hidden;
+}
+
+.canvas canvas {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.map-toolbar {
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
+  pointer-events: none;
+  bottom: 1rem;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.circular {
+  background-color: rgba(50, 50, 50, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  font-size: 1.5rem;
+  width: 2rem;
+  height: 2rem;
+  backdrop-filter: var(--blur-filter);
+  border-radius: 45px;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.circular:hover {
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 .full-screen {

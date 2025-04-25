@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CESIUM EXAMPLE</title>
+    <link rel="stylesheet" href="../../style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="map-toolbar">
+      <a class="button circular" id="map-view" title="Map view">
+        <i data-lucide="map" style="color: white"></i>
+      </a>
+      <a class="button circular" id="go-to" title="Go to site">
+        <i data-lucide="navigation" style="color: white"></i>
+      </a>
+      <a class="button circular" id="home" title="Go to home" href="../../">
+        <i data-lucide="home" style="color: white"></i>
+      </a>
+    </div>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+      lucide.createIcons();
+    </script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/cesium/1.93.0/Cesium.js"
+      integrity="sha512-ZeH8MWL4o0SAhe5r9XgR4dp+0dP3o7l/JrwSUjN3uF03fzZYTdDir7ScF3fS70Y82JCBYxl3tuNHodxjWQEcTw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>
+
+    <div class="canvas" id="cesiumContainer"></div>
+    <script src="./main.js" type="module"></script>
+  </body>
+</html>

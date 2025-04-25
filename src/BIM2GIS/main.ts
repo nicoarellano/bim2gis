@@ -205,7 +205,7 @@ const disposeModels = async (ids = getModelsIds()) => {
 
 const maplibre = new maplibregl.Map({
   container: 'map-container', // container id
-  style: '../resources/styles/satellite.json',
+  style: '../../resources/styles/satellite.json',
   center: [-75.69765955209732, 45.38389669263273], // AA Carleton
   // center: [-123.11, 49.257], // Vancouver
   zoom: 15,
@@ -239,7 +239,7 @@ async function setMarker(coords: Coords) {
     },
   };
 
-  const image = await maplibre.loadImage('../resources/images/ifc-logo.png');
+  const image = await maplibre.loadImage('../../resources/images/ifc-logo.png');
   if (maplibre.getImage('custom-marker')) maplibre.removeImage('custom-marker');
   maplibre.addImage('custom-marker', image.data);
 
