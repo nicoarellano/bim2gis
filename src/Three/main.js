@@ -43,11 +43,11 @@ const greenCube = new THREE.Mesh(geometry, greenMaterial);
 
 yellowCube.position.z = -3;
 blueCube.position.x = -3;
-redCube.position.x = 3;
+redCube.position.x = -3;
 greenCube.position.z = 3;
 
 scene.add(yellowCube);
-scene.add(blueCube);
+// scene.add(blueCube);
 scene.add(redCube);
 scene.add(greenCube);
 
@@ -56,13 +56,13 @@ const gltfLoader = new THREE.GLTFLoader();
 let mesh;
 
 gltfLoader.load(
-  './gltf_logo.glb',
+  // './gltf_logo.glb',
+  'https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf',
   function (gltf) {
     mesh = gltf.scene;
-    mesh.scale.x = 3;
-    mesh.scale.y = 3;
-    mesh.scale.z = 3;
-    mesh.position.y = 4;
+    mesh.scale.x = 0.1;
+    mesh.scale.y = 0.1;
+    mesh.scale.z = 0.1;
 
     scene.add(mesh);
   },
@@ -102,11 +102,11 @@ function createText(text, elevation = 0, textColor = '0x000000', size = 0.5) {
   });
 }
 
-createText('BIM TO GIS', 6, '0XFF00FF');
-createText('OPEN-SOURCE TECH STACK', 5, '0XFF00FF');
-createText('- Ken Percy', 4, '0XFF0000');
-createText('- Nicolas Arellano', 3, '0X00ff00');
-createText('- CIMS', 2, '0X0000ff');
+createText('BIM TO GIS', 4, '0XFF00FF');
+createText('OPEN-SOURCE TECH STACK', 3, '0XFFff00');
+createText('- Ken Percy', 2, '0XFF0000');
+createText('- Nicolas Arellano', 1, '0X00ff00');
+createText('- CIMS', 0, '0X0000ff');
 
 camera.position.z = 13;
 camera.position.x = 5;
@@ -131,22 +131,29 @@ directionalLight.target.position.set(0, 3, 0);
 scene.add(directionalLight);
 scene.add(directionalLight.target);
 
+const playPauseButton = document.getElementById('play-pause');
+playPauseButton.onclick = function () {
+  rotating = !rotating;
+};
+let rotating = true;
 function animate() {
   requestAnimationFrame(animate);
 
-  if (mesh) mesh.rotation.y += 0.01;
+  if (rotating) {
+    if (mesh) mesh.rotation.y += 0.01;
 
-  yellowCube.rotation.x += 0.01;
-  yellowCube.rotation.y += 0.01;
+    yellowCube.rotation.x += 0.01;
+    yellowCube.rotation.y += 0.01;
 
-  blueCube.rotation.x += 0.02;
-  blueCube.rotation.y -= 0.01;
+    blueCube.rotation.x += 0.02;
+    blueCube.rotation.y -= 0.01;
 
-  redCube.rotation.x -= 0.01;
-  redCube.rotation.y -= 0.02;
+    redCube.rotation.x -= 0.01;
+    redCube.rotation.y -= 0.02;
 
-  greenCube.rotation.x += 0.02;
-  greenCube.rotation.y -= 0.01;
+    greenCube.rotation.x += 0.02;
+    greenCube.rotation.y -= 0.01;
+  }
 
   renderer.render(scene, camera);
 }

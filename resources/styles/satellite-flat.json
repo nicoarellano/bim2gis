@@ -18,21 +18,7 @@
         "maptiler_planet": {
             "url": "https://api.maptiler.com/tiles/v3/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
             "type": "vector"
-        },
-        "terrainSource": {
-            "type": "raster-dem",
-            "url": "https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
-            "tileSize": 256
-        },
-        "hillshadeSource": {
-            "type": "raster-dem",
-            "url": "https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
-            "tileSize": 256
         }
-    },
-    "terrain": {
-        "source": "terrainSource",
-        "exaggeration": 1
     },
     "layers": [
         {
@@ -906,17 +892,6 @@
                     "continent"
                 ]
             ]
-        },
-        {
-            "id": "hills",
-            "type": "hillshade",
-            "source": "hillshadeSource",
-            "layout": {
-                "visibility": "visible"
-            },
-            "paint": {
-                "hillshade-shadow-color": "#473B24"
-            }
         }
     ],
     "sky": {

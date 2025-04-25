@@ -8,9 +8,9 @@ function initMapbox() {
     'pk.eyJ1Ijoibmljby1hcmVsbGFubyIsImEiOiJjbGRkNzV1aDcwMHE5M3ZtcTA4OHZvdnZ2In0.62n_DqnBfOYRz2lNakP8IA';
   const map = new mapboxgl.Map({
     container: 'mapboxContainer', // container ID
-    style: 'mapbox://styles/mapbox/satellite-streets-v11',
+    style: '../../resources/styles/satellite-flat.json',
     center: [-98.74, 56.415], // starting position [lng, lat]
-    zoom: 1.5, // starting zoom
+    zoom: 3.5, // starting zoom
     antialias: true,
     projection: 'globe', // display the map as a 3D globe
   });
@@ -44,11 +44,11 @@ function initMapbox() {
       const mapIcon = document.getElementById('map-icon');
       // mapIcon.setAttribute('d');
       this.setAttribute('title', 'Satellite view');
-      map.setStyle('mapbox://styles/mapbox/streets-v11');
+      map.setStyle('../../resources/styles/streets.json');
     } else {
       const mapIcon = document.getElementById('map-icon');
       this.setAttribute('title', 'Map view');
-      map.setStyle('mapbox://styles/mapbox/satellite-streets-v11');
+      map.setStyle('../../resources/styles/satellite-flat.json');
     }
     toggleMapView = !toggleMapView;
   };

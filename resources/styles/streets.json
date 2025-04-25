@@ -4,7 +4,7 @@
     "name": "Streets",
     "sources": {
         "openmaptiles": {
-            "url": "https://api.maptiler.com/tiles/v3/tiles.json?key=q54cDjzBUzfxYseOWe5v",
+            "url": "https://api.maptiler.com/tiles/v3/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
             "type": "vector"
         },
         "maptiler_attribution": {
@@ -7320,10 +7320,35 @@
             }
         }
     ],
+    "sky": {
+        "atmosphere-blend": [
+            "interpolate",
+            [
+                "linear"
+            ],
+            [
+                "zoom"
+            ],
+            0,
+            1,
+            5,
+            1,
+            7,
+            0
+        ]
+    },
+    "light": {
+        "anchor": "map",
+        "position": [
+            1.5,
+            90,
+            80
+        ]
+    },
     "metadata": {
         "maptiler:copyright": "This style was generated on MapTiler Cloud. Usage outside of MapTiler Cloud requires valid MapTiler Data Package: https://www.maptiler.com/data/package/ -- please contact us."
     },
-    "glyphs": "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=q54cDjzBUzfxYseOWe5v",
+    "glyphs": "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=get_your_own_OpIi9ZULNHzrESv6T2vL",
     "sprite": "https://api.maptiler.com/maps/streets/sprite",
     "bearing": 0,
     "pitch": 0,
