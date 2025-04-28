@@ -60,9 +60,9 @@ gltfLoader.load(
   'https://maplibre.org/maplibre-gl-js/docs/assets/34M_17/34M_17.gltf',
   function (gltf) {
     mesh = gltf.scene;
-    mesh.scale.x = 0.1;
-    mesh.scale.y = 0.1;
-    mesh.scale.z = 0.1;
+    mesh.scale.x = 0.15;
+    mesh.scale.y = 0.15;
+    mesh.scale.z = 0.15;
 
     scene.add(mesh);
   },
@@ -95,7 +95,7 @@ function createText(text, elevation = 0, textColor = '0x000000', size = 0.5) {
     const textMaterial = new THREE.MeshLambertMaterial({ color: color });
     const text = new THREE.Mesh(textGeo, textMaterial);
 
-    text.position.x = 2;
+    text.position.x = 3;
     text.position.y = elevation;
 
     scene.add(text);

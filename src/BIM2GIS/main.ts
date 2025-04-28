@@ -595,7 +595,7 @@ const crsReport = `Current map longitude: ${lng},
 UTM Zone: ${zone} → EPSG:269${zone} 
 UTM Coords: ${utmCoord} 
 WGS84 Coordinates:, ${wgs84Coord}`;
-// console.log(crsReport);
+console.log(crsReport);
 
 const serializer = new FRAGS.IfcImporter();
 serializer.wasm = { absolute: true, path: 'https://unpkg.com/web-ifc@0.0.68/' };
