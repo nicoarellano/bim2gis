@@ -106,18 +106,6 @@ bimContainer.addEventListener('click', async (event) => {
   console.log('Data: ', data);
 });
 
-/* At any point, you can retrieve the binary data of a loaded model for exporting. This is particularly useful when models are loaded automatically from a remote source, but you want to provide an option to download the data locally for further use:
- */
-
-const getBinaryData = async (id: string) => {
-  const model = fragments.models.list.get(id);
-  if (!model) return null;
-  const buffer = await model.getBuffer(false);
-  return { name: model.modelId, buffer };
-};
-
-/* Helper function to retrieve these IDs. This will make it easier to manage models, such as loading, disposing, or performing other operations on them. */
-
 const getModelsIds = () => {
   const models = fragments.models.list.values();
   const ids = [...models].map((model) => model.modelId);
@@ -216,13 +204,6 @@ const maplibre = new maplibregl.Map({
   maplibreLogo: true,
   doubleClickZoom: false,
 });
-
-/*
-let building = buildings.find((building) => building.id === 'PA');
-if (!building || !building.location) {
-  throw new Error("Building with id 'AA' not found or location is undefined.");
-}
-  */
 
 async function setMarker(coords: Coords) {
   const source: SourceSpecification = {
@@ -595,7 +576,7 @@ const crsReport = `Current map longitude: ${lng},
 UTM Zone: ${zone} → EPSG:269${zone} 
 UTM Coords: ${utmCoord} 
 WGS84 Coordinates:, ${wgs84Coord}`;
-console.log(crsReport);
+// console.log(crsReport);
 
 const serializer = new FRAGS.IfcImporter();
 serializer.wasm = { absolute: true, path: 'https://unpkg.com/web-ifc@0.0.68/' };
