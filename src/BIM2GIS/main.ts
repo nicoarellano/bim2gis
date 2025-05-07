@@ -226,7 +226,9 @@ async function setMarker(coords: Coords) {
     },
   };
 
-  const image = await maplibre.loadImage('../../resources/images/ifc-logo.png');
+  const image = await maplibre.loadImage(
+    '/bim2gis/resources/images/ifc-logo.png'
+  );
   if (maplibre.getImage('custom-marker')) maplibre.removeImage('custom-marker');
   maplibre.addImage('custom-marker', image.data);
 
