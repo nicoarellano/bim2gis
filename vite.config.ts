@@ -23,5 +23,5 @@ export default defineConfig({
   esbuild: {
     target: 'esnext', // Use a modern target that supports top-level await
   },
-  base: '/BIM2GIS/', // Set the base path for the project
+  base: '/bim2gis/', // Set the base path for the project
 });
