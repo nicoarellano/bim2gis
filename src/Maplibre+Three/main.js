@@ -4,7 +4,7 @@ import maplibregl, { AttributionControl } from 'maplibre-gl';
 
 const map = new maplibregl.Map({
   container: 'maplibreContainer',
-  style: '/styles/satellite-flat.json',
+  style: '/bim2gis/styles/satellite-flat.json',
   zoom: 3,
   center: [-98.74, 56.415],
   pitch: 0,
@@ -34,10 +34,10 @@ let toggleMapView = true;
 mapView.onclick = function () {
   if (toggleMapView) {
     this.setAttribute('title', 'Satellite view');
-    map.setStyle('/styles/streets.json');
+    map.setStyle('/bim2gis/styles/streets.json');
   } else {
     this.setAttribute('title', 'Map view');
-    map.setStyle('/styles/satellite-flat.json');
+    map.setStyle('/bim2gis/styles/satellite-flat.json');
   }
   toggleMapView = !toggleMapView;
 };

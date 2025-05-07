@@ -199,7 +199,7 @@ const disposeModels = async (ids = getModelsIds()) => {
 
 const maplibre = new maplibregl.Map({
   container: 'map-container', // container id
-  style: '/styles/satellite.json',
+  style: '/bim2gis/styles/satellite.json',
   center: [-75.69765955209732, 45.38389669263273], // AA Carleton
   // center: [-123.11, 49.257], // Vancouver
   zoom: 15,
