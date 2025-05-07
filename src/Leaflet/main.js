@@ -19,8 +19,6 @@ function initLeaflet() {
 
   satellite.addTo(map);
 
-  // style: "/map-styles/satelliteHybrid.json",
-
   // Go To Site 🏢
   const goTo = document.getElementById('go-to');
   let toggleGoTo = true;

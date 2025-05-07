@@ -77,7 +77,7 @@ const fontLoader = new THREE.FontLoader();
 function createText(text, elevation = 0, textColor = '0x000000', size = 0.5) {
   const textValue = text;
   const textSize = size;
-  fontLoader.load('./helvetiker_regular.typeface.json', function (font) {
+  fontLoader.load('/fonts/helvetiker_regular.typeface.json', function (font) {
     const textGeo = new THREE.TextGeometry(textValue, {
       font: font,
       size: textSize,
@@ -103,10 +103,10 @@ function createText(text, elevation = 0, textColor = '0x000000', size = 0.5) {
 }
 
 createText('BIM TO GIS', 4, '0XFF00FF');
-createText('OPEN-SOURCE TECH STACK', 3, '0XFFff00');
-createText('- Ken Percy', 2, '0XFF0000');
-createText('- Nicolas Arellano', 1, '0X00ff00');
-createText('- CIMS', 0, '0X0000ff');
+createText('OPEN-SOURCE', 3, '0X00ff00');
+createText('TECH STACK', 2, '0X00ff00');
+createText('Three.js', 1, '0XFF0000');
+createText('CIMS', 0, '0X000000');
 
 camera.position.z = 13;
 camera.position.x = 5;

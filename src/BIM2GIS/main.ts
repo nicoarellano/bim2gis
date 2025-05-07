@@ -122,7 +122,13 @@ fileInput.addEventListener('change', async (event) => {
   console.log('File: ', file);
   const buffer = await file.arrayBuffer();
   if (file.name.endsWith('.ifc')) {
-    model = await convertIFC(file);
+    const convertedModel = await convertIFC(file);
+    if (convertedModel) {
+      model = convertedModel;
+    } else {
+      console.error('Failed to convert IFC file.');
+      return;
+    }
   }
   if (file.name.endsWith('.frag')) {
     model = await fragments.load(buffer, {
@@ -193,7 +199,7 @@ const disposeModels = async (ids = getModelsIds()) => {
 
 const maplibre = new maplibregl.Map({
   container: 'map-container', // container id
-  style: '../../resources/styles/satellite.json',
+  style: '/styles/satellite.json',
   center: [-75.69765955209732, 45.38389669263273], // AA Carleton
   // center: [-123.11, 49.257], // Vancouver
   zoom: 15,
@@ -596,6 +602,7 @@ let onConversionFinish = () => {};
 export const convertIFC = async (file: File) => {
   const ifcBuffer = await file.arrayBuffer();
   const ifcBytes = new Uint8Array(ifcBuffer);
+  // @ts-ignore
   fragmentBytes = await serializer.process({ bytes: ifcBytes });
   if (!fragmentBytes) return;
   const modelId = file.name.replace('.ifc', '');

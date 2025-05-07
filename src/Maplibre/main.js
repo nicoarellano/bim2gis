@@ -6,7 +6,7 @@ using the EPSG:3857 projected coordinate system
 
 const map = new maplibregl.Map({
   container: 'maplibreContainer', // container ID
-  style: '../../resources/styles/satellite-flat.json',
+  style: '/styles//satellite-flat.json',
   center: [-98.74, 56.415], // starting position [lng, lat]
   zoom: 3, // starting zoom
   antialias: true,
@@ -42,10 +42,10 @@ let toggleMapView = true;
 mapView.onclick = function () {
   if (toggleMapView) {
     this.setAttribute('title', 'Satellite view');
-    map.setStyle('../../resources/styles/streets.json');
+    map.setStyle('/styles/streets.json');
   } else {
     this.setAttribute('title', 'Map view');
-    map.setStyle('../../resources/styles/satellite-flat.json');
+    map.setStyle('/styles/satellite-flat.json');
   }
   toggleMapView = !toggleMapView;
 };
