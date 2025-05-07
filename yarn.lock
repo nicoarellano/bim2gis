@@ -474,10 +474,10 @@
     jszip "3.10.1"
     three-mesh-bvh "0.7.0"
 
-"@thatopen/fragments@^3.0.2":
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/@thatopen/fragments/-/fragments-3.0.2.tgz#087ef525cba79db9631ac48a4834c7345500c3ac"
-  integrity sha512-StM764ADM1GzeyorC5Xu1nNi8yDXK17au8kzrDjuedNtjxBovNm9UG3qOpX6ESXTyasPuoncOMT2VPHM/XqPKA==
+"@thatopen/fragments@^3.0.5":
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/@thatopen/fragments/-/fragments-3.0.5.tgz#6e8fa1f12be89d834d99dd5f7e33ae63572ecac5"
+  integrity sha512-rj8C6g9KHfxlAxDq1KonvOYefbOyqwHe4NKn9TAIqrnYmAanTVFrMxskNwrPF6WqFGFXwIuXsU0qysZG2E7ZWQ==
   dependencies:
     flatbuffers "25.2.10"
     lru-cache "11.1.0"

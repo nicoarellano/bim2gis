@@ -272,19 +272,19 @@ const loadModel = async (model: FRAGS.FragmentsModel) => {
   maplibre.getCanvas().style.cursor = 'crosshair';
   holdPopup = true;
 
-  /*
   const items = await model.getItemsOfCategory('IFCMAPCONVERSION');
-  const ifcSite = await model.getItemsOfCategory('IFCSITE');
+  // const items = await model.getItemsOfCategory('IFCSITE');
 
   const localIds = (
     await Promise.all(
       items.map((item) => {
-        console.log('Item: ', item);
         return item.getLocalId();
       })
     )
   ).filter((localId) => localId !== null) as number[];
-
+  const data = await model.getItemsData(localIds);
+  console.log('Data: ', data);
+  /*
   for (const localId of localIds) {
     const data = await model.getItemsData([localId], {
       relations: {
@@ -302,7 +302,7 @@ const loadModel = async (model: FRAGS.FragmentsModel) => {
   for (const [_, data] of Object.entries(items)) {
     console.log('Data: ', data);
     if (!data) continue;
-
+   
     const { RefLatitude, RefLongitude, RefElevation } = data;
 
     if (!RefLatitude || !RefLongitude || !RefElevation) continue;
@@ -311,8 +311,8 @@ const loadModel = async (model: FRAGS.FragmentsModel) => {
     console.log('RefLongitude: ', RefLongitude);
     // const latitude = this.convertDMStoDecimal(RefLatitude);
     // const longitude = this.convertDMStoDecimal(RefLongitude);
-  }
-  */
+    
+  }*/
 };
 
 const removeAll = document.getElementById('remove-all') as HTMLButtonElement;
@@ -566,17 +566,27 @@ proj4.defs(
   `+proj=utm +zone=${zone} +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs`
 );
 
+proj4.defs(
+  'EPSG:2951',
+  '+proj=tmerc +lat_0=0 +lon_0=-76.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=-0.991,1.9072,0.5129,-1.25033e-07,-4.6785e-08,-5.6529e-08,0 +units=m +no_defs +type=crs'
+);
+
 // Sample UTM coordinate in Ottawa (EPSG:26918)
 // const utmCoord = [445325.701, 5025571.622]; // [Easting, Northing] Paterson Hall
-const utmCoord = [445518.6, 5026017.2]; // [Easting, Northing] Center of Carleton University
+// const utmCoord = [445518.6, 5026017.2]; // [Easting, Northing] Center of Carleton University
+const utmCoord = [367931.6, 5027647]; // [Easting, Northing] Fire hydrant? coordinate system?
 
 // Transform to WGS84 (EPSG:4326)
-const wgs84Coord = proj4(`EPSG:269${zone}`, 'EPSG:4326', utmCoord);
+// const wgs84Coord = proj4(`EPSG:269${zone}`, 'EPSG:4326', utmCoord);
+const wgs84Coord = proj4(`EPSG:2951`, 'EPSG:4326', utmCoord);
+
+setMarker({ lng: wgs84Coord[0], lat: wgs84Coord[1] });
+
 const crsReport = `Current map longitude: ${lng}, 
 UTM Zone: ${zone} → EPSG:269${zone} 
 UTM Coords: ${utmCoord} 
 WGS84 Coordinates:, ${wgs84Coord}`;
-// console.log(crsReport);
+console.log(crsReport);
 
 const serializer = new FRAGS.IfcImporter();
 serializer.wasm = { absolute: true, path: 'https://unpkg.com/web-ifc@0.0.68/' };
