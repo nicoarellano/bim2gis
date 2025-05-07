@@ -18,6 +18,8 @@ import proj4 from 'proj4';
 interface Coords {
   lng: number;
   lat: number;
+  elevation?: number;
+  rotation?: number;
 }
 
 // 🌎 Setting up a Simple Scene
@@ -66,8 +68,16 @@ world.camera.controls.restThreshold = 0.005;
 world.camera.controls.addEventListener('rest', () => fragments.update(true));
 world.camera.controls.addEventListener('update', () => fragments.update());
 
+interface IfcData {
+  model: FRAGS.FragmentsModel;
+  mapConversionValues?: { x: number; y: number; z: number } | null;
+  epgsCode?: string | null;
+  rotationDegrees?: number;
+}
+
 // 📂 Loading Fragments Models
 let models: FRAGS.FragmentsModel[] = [];
+let ifcData: IfcData | null = null;
 let model: FRAGS.FragmentsModel;
 let bbox: THREE.Box3;
 
@@ -103,7 +113,7 @@ bimContainer.addEventListener('click', async (event) => {
     },
   });
 
-  console.log('Data: ', data);
+  // console.log('Data: ', data);
 });
 
 const getModelsIds = () => {
@@ -124,7 +134,14 @@ fileInput.addEventListener('change', async (event) => {
   if (file.name.endsWith('.ifc')) {
     const convertedModel = await convertIFC(file);
     if (convertedModel) {
-      model = convertedModel;
+      model = convertedModel.model;
+      ifcData = {
+        model,
+        mapConversionValues: convertedModel.mapConversionValues || null,
+        epgsCode: convertedModel.epgsCode || null,
+        rotationDegrees: convertedModel.rotationDegrees || 0,
+      };
+      console.log('IFC Data: ', ifcData);
     } else {
       console.error('Failed to convert IFC file.');
       return;
@@ -135,8 +152,8 @@ fileInput.addEventListener('change', async (event) => {
       modelId: file.name.replace('.frag', ''),
     });
   }
-  if (!model) return;
-  loadModel(model);
+  if (!ifcData) return;
+  loadModel(ifcData);
 });
 
 const angleSlider = document.getElementById('angle-slider') as HTMLInputElement;
@@ -259,8 +276,9 @@ const removeModelFromMap = () => {
   maplibre.removeImage('custom-marker');
 };
 
-// const ids = getModelsIds();
-const loadModel = async (model: FRAGS.FragmentsModel) => {
+const loadModel = async (ifcData: IfcData) => {
+  const { model, epgsCode, mapConversionValues, rotationDegrees } = ifcData;
+
   const modelId = model.modelId;
   console.log('Loading model: ', modelId);
 
@@ -277,50 +295,23 @@ const loadModel = async (model: FRAGS.FragmentsModel) => {
   mapScene.add(mapModel.object);
 
   fragments.update(true);
-  maplibre.getCanvas().style.cursor = 'crosshair';
-  holdPopup = true;
 
-  const items = await model.getItemsOfCategory('IFCMAPCONVERSION');
-  // const items = await model.getItemsOfCategory('IFCSITE');
+  if (mapConversionValues) {
+    const { x, y, z } = mapConversionValues;
 
-  const localIds = (
-    await Promise.all(
-      items.map((item) => {
-        return item.getLocalId();
-      })
-    )
-  ).filter((localId) => localId !== null) as number[];
-  const data = await model.getItemsData(localIds);
-  console.log('Data: ', data);
-  /*
-  for (const localId of localIds) {
-    const data = await model.getItemsData([localId], {
-      relations: {
-        attribute: {
-          attributes: true,
-          relations: true,
-        },
-      },
-    });
-    console.log('Data: ', data);
+    const wgs84Coord = proj4(`EPSG:2951`, 'EPSG:4326', [x, y]);
+    const [lng, lat] = wgs84Coord;
+    coords = { lng, lat, elevation: z, rotation: rotationDegrees };
+
+    setMarker({ lng, lat });
+    loadModelToMap(coords);
+    modelTools.style.display = 'flex';
+
+    modelElevation = mapConversionValues.z;
+  } else {
+    maplibre.getCanvas().style.cursor = 'crosshair';
+    holdPopup = true;
   }
-
-  console.log('IFC SITE: ', items);
-
-  for (const [_, data] of Object.entries(items)) {
-    console.log('Data: ', data);
-    if (!data) continue;
-   
-    const { RefLatitude, RefLongitude, RefElevation } = data;
-
-    if (!RefLatitude || !RefLongitude || !RefElevation) continue;
-
-    console.log('RefLatitude: ', RefLatitude);
-    console.log('RefLongitude: ', RefLongitude);
-    // const latitude = this.convertDMStoDecimal(RefLatitude);
-    // const longitude = this.convertDMStoDecimal(RefLongitude);
-    
-  }*/
 };
 
 const removeAll = document.getElementById('remove-all') as HTMLButtonElement;
@@ -337,13 +328,14 @@ world.renderer.onBeforeUpdate.add(() => stats.begin());
 world.renderer.onAfterUpdate.add(() => stats.end());
 
 // const { coords } = building.location;
-let coords = {
+let origin = {
   lng: -75.69835199446455,
   lat: 45.38152527897171,
 };
+let coords: Coords;
 
-let sceneOrigin = new maplibregl.LngLat(coords.lng, coords.lat);
-let modelLocation = new maplibregl.LngLat(coords.lng, coords.lat);
+let sceneOrigin = new maplibregl.LngLat(origin.lng, origin.lat);
+let modelLocation = new maplibregl.LngLat(origin.lng, origin.lat);
 
 const layerRenderer = new THREE.WebGLRenderer({
   canvas: maplibre.getCanvas(),
@@ -357,9 +349,6 @@ const popup = new maplibregl.Popup({
 });
 
 fragments.models.list.onItemSet.add(async ({ value: model }) => {
-  console.log(`Model ${model.modelId} loaded: `, model);
-  // if (model.modelId.endsWith('map')) await model.useCamera(mapCamera);
-  // else await model.useCamera(world.camera.three);
   model.useCamera(currentCamera);
   const geometry = model.object;
   world.scene.three.add(geometry);
@@ -370,9 +359,7 @@ let bimCamera = world.camera.three;
 let currentCamera = bimCamera;
 
 async function loadModelToMap(coords: Coords) {
-  // if (!building) return;
   mapElevation = maplibre.queryTerrainElevation(coords) ?? 0;
-  // modelElevation = building?.location.elevation + mapElevation;
   modelElevation = mapElevation;
   const { lng, lat } = coords;
   modelLocation = new maplibregl.LngLat(lng, lat);
@@ -583,32 +570,131 @@ proj4.defs(
 // const utmCoord = [445325.701, 5025571.622]; // [Easting, Northing] Paterson Hall
 // const utmCoord = [445518.6, 5026017.2]; // [Easting, Northing] Center of Carleton University
 const utmCoord = [367931.6, 5027647]; // [Easting, Northing] Fire hydrant? coordinate system?
+// const elevation = 59.1; // Elevation in meters (example value)
+// const ifcDirection = [-0.707106781186548, 0.707106781186548];
+// const ifcDirectionToDegree = ifcDirectionToDegrees({
+//   DirectionRatios: ifcDirection,
+// }).degrees;
 
 // Transform to WGS84 (EPSG:4326)
 // const wgs84Coord = proj4(`EPSG:269${zone}`, 'EPSG:4326', utmCoord);
 const wgs84Coord = proj4(`EPSG:2951`, 'EPSG:4326', utmCoord);
 
-setMarker({ lng: wgs84Coord[0], lat: wgs84Coord[1] });
+// setMarker({ lng: wgs84Coord[0], lat: wgs84Coord[1] });
 
 const crsReport = `Current map longitude: ${lng}, 
 UTM Zone: ${zone} → EPSG:269${zone} 
+MTM Zone 9: EPSG:2951 
 UTM Coords: ${utmCoord} 
-WGS84 Coordinates:, ${wgs84Coord}`;
-console.log(crsReport);
+WGS84 Coordinates: ${wgs84Coord}
+`;
+// console.log(crsReport);
 
 const serializer = new FRAGS.IfcImporter();
 serializer.wasm = { absolute: true, path: 'https://unpkg.com/web-ifc@0.0.68/' };
 let fragmentBytes: ArrayBuffer | null = null;
 let onConversionFinish = () => {};
 
-export const convertIFC = async (file: File) => {
+export const convertIFC = async (file: File): Promise<IfcData | null> => {
   const ifcBuffer = await file.arrayBuffer();
+  const ifcLines = new TextDecoder().decode(ifcBuffer).split('\n');
+  const mapConversionValues = extractMapConversionValues(ifcLines);
+  const epgsCode = extractEPSGFromIFC(ifcLines);
+  const rotation = getRotation(ifcLines);
+  const rotationDegrees = rotation
+    ? ifcDirectionToDegrees({ DirectionRatios: rotation }).degrees
+    : 0;
+
   const ifcBytes = new Uint8Array(ifcBuffer);
   // @ts-ignore
   fragmentBytes = await serializer.process({ bytes: ifcBytes });
-  if (!fragmentBytes) return;
   const modelId = file.name.replace('.ifc', '');
+  if (!fragmentBytes) return null;
   const model = await fragments.load(fragmentBytes, { modelId });
   onConversionFinish();
-  return model;
+  return { model, mapConversionValues, epgsCode, rotationDegrees };
 };
+
+export function ifcDirectionToDegrees(direction: {
+  DirectionRatios: number[];
+}) {
+  if (
+    !direction ||
+    !direction.DirectionRatios ||
+    direction.DirectionRatios.length < 2
+  ) {
+    throw new Error('Invalid IFCDIRECTION object');
+  }
+
+  const [x, y] = direction.DirectionRatios;
+  const radians = Math.atan2(x, y); // Invert the ratio by swapping x and y
+  const degrees = (radians * 180) / Math.PI;
+
+  return {
+    degrees: (degrees + 360) % 360, // Normalize to 0-360
+    radians,
+  };
+}
+
+function extractEPSGFromIFC(lines: string[]): string | null {
+  const epsgRegex = /EPSG:\d{4}/;
+  const epsgMatches = lines
+    .map((line) => line.match(epsgRegex))
+    .filter((match) => match !== null);
+
+  if (epsgMatches.length > 0) {
+    const epsgCode = epsgMatches[0]![0];
+    return epsgCode;
+  } else {
+    return null;
+  }
+}
+
+function extractMapConversionValues(
+  ifcLines: string[]
+): { x: number; y: number; z: number } | null {
+  const mapConversionRegex =
+    /#\d+=IFCMAPCONVERSION\([^,]+,[^,]+,([\d.-]+),([\d.-]+),([\d.-]+)/;
+
+  const mapConversionLine = ifcLines.find((line) =>
+    mapConversionRegex.test(line)
+  );
+
+  if (!mapConversionLine) return null;
+
+  const match = mapConversionLine.match(mapConversionRegex);
+  if (!match || match.length < 4) return null;
+
+  const x = parseFloat(match[1]);
+  const y = parseFloat(match[2]);
+  const z = parseFloat(match[3]);
+
+  const result: { x: number; y: number; z: number } = { x, y, z };
+  return result;
+}
+
+function getRotation(ifcLines: string[]): number[] | null {
+  const contextRegex =
+    /#\d+=IFCGEOMETRICREPRESENTATIONCONTEXT\([^,]+,[^,]+,[^,]+,[^,]+,[^,]+,(#[\d]+)\)/;
+
+  const contextLine = ifcLines.find((line) => contextRegex.test(line));
+  if (!contextLine) return null;
+
+  const match = contextLine.match(contextRegex);
+  if (!match || match.length < 2) return null;
+
+  const directionId = match[1]; // Extract the direction ID (e.g., #71)
+  const directionLine = ifcLines.find((line) =>
+    line.startsWith(`${directionId}=`)
+  );
+  if (!directionLine) return null;
+
+  const directionRegex = /IFCDIRECTION\(\((-?[\d.]+),(-?[\d.]+)\)\)/;
+  const directionMatch = directionLine.match(directionRegex);
+  if (!directionMatch || directionMatch.length < 3) return null;
+
+  const x = parseFloat(directionMatch[1]);
+  const y = parseFloat(directionMatch[2]);
+
+  return [x, y]; // Return the array of two numbers
+}
