@@ -103,17 +103,6 @@ bimContainer.addEventListener('click', async (event) => {
     renderedFaces: FRAGS.RenderedFaces.ONE,
   });
   fragments.update(true);
-
-  const data = await model.getItemsData([localId], {
-    relations: {
-      IsDefinedBy: {
-        attributes: true,
-        relations: true,
-      },
-    },
-  });
-
-  // console.log('Data: ', data);
 });
 
 const getModelsIds = () => {
@@ -161,7 +150,6 @@ const anglelabel = document.getElementById('angle') as HTMLLabelElement;
 const altitudeSlider = document.getElementById(
   'altitude-slider'
 ) as HTMLInputElement;
-let altitude = 0;
 let dynamicAltitude = 0;
 let mapElevation = 0;
 let modelElevation = 0;
@@ -383,9 +371,6 @@ async function loadModelToMap(coords: Coords) {
     fragments.update();
   });
 
-  const elevationValue = altitudeSlider.value;
-  const elevationNumber = parseFloat(elevationValue);
-
   const customLayer: CustomLayerInterface = {
     id: '3d-model',
     type: 'custom',
@@ -579,7 +564,7 @@ MTM Zone 9: EPSG:2951
 UTM Coords: ${utmCoord} 
 WGS84 Coordinates: ${wgs84Coord}
 `;
-// console.log(crsReport);
+console.log(crsReport);
 
 const serializer = new FRAGS.IfcImporter();
 serializer.wasm = { absolute: true, path: 'https://unpkg.com/web-ifc@0.0.68/' };
