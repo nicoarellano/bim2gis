@@ -91,16 +91,17 @@
             value="0"
             oninput="document.getElementById('angle').textContent = this.value"
           />
-          <label class="input-label" id="heigh-label">
-            IFC elev: <span id="height">0</span> mts
+          <label class="input-label" id="altitude-label">
+            IFC elev: <span id="altitude">0</span> mts
           </label>
           <input
-            id="height-slider"
+            id="altitude-slider"
             type="range"
             min="-100"
             max="100"
             step="01"
             value="0"
+            oninput="document.getElementById('altitude').textContent = this.value"
           />
           <input
             type="number"
