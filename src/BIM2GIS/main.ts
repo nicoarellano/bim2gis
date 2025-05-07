@@ -157,19 +157,16 @@ fileInput.addEventListener('change', async (event) => {
 });
 
 const angleSlider = document.getElementById('angle-slider') as HTMLInputElement;
-const heightSlider = document.getElementById(
-  'height-slider'
+const anglelabel = document.getElementById('angle') as HTMLLabelElement;
+const altitudeSlider = document.getElementById(
+  'altitude-slider'
 ) as HTMLInputElement;
 let altitude = 0;
 let dynamicAltitude = 0;
 let mapElevation = 0;
 let modelElevation = 0;
 
-const altitudeLabel = document.getElementById('height') as HTMLLabelElement;
-heightSlider.addEventListener('input', () => {
-  dynamicAltitude = parseFloat(heightSlider.value);
-  altitudeLabel.textContent = dynamicAltitude.toString();
-});
+const altitudeLabel = document.getElementById('altitude') as HTMLLabelElement;
 const modelTools = document.getElementById('model-tools') as HTMLButtonElement;
 const downloadFrag = document.getElementById(
   'download-frag'
@@ -195,7 +192,7 @@ const onDownloadModel = async () => {
 
 const clearUiInputs = () => {
   if (angleSlider) angleSlider.value = '0';
-  if (heightSlider) heightSlider.value = '0';
+  if (altitudeSlider) altitudeSlider.value = '0';
   modelTools.style.display = 'none';
 };
 
@@ -277,7 +274,7 @@ const removeModelFromMap = () => {
 };
 
 const loadModel = async (ifcData: IfcData) => {
-  const { model, epgsCode, mapConversionValues, rotationDegrees } = ifcData;
+  const { model, mapConversionValues, rotationDegrees } = ifcData;
 
   const modelId = model.modelId;
   console.log('Loading model: ', modelId);
@@ -335,7 +332,6 @@ let origin = {
 let coords: Coords;
 
 let sceneOrigin = new maplibregl.LngLat(origin.lng, origin.lat);
-let modelLocation = new maplibregl.LngLat(origin.lng, origin.lat);
 
 const layerRenderer = new THREE.WebGLRenderer({
   canvas: maplibre.getCanvas(),
@@ -359,15 +355,14 @@ let bimCamera = world.camera.three;
 let currentCamera = bimCamera;
 
 async function loadModelToMap(coords: Coords) {
-  mapElevation = maplibre.queryTerrainElevation(coords) ?? 0;
-  modelElevation = mapElevation;
-  const { lng, lat } = coords;
-  modelLocation = new maplibregl.LngLat(lng, lat);
+  const { lng, lat, rotation, elevation } = coords;
+  mapElevation = elevation ?? maplibre.queryTerrainElevation(coords) ?? 0;
   sceneOrigin = new maplibregl.LngLat(lng, lat);
+  angleSlider.value = String(rotation) ?? 0;
 
   const modelAsMercatorCoordinate = maplibregl.MercatorCoordinate.fromLngLat(
     coords,
-    modelElevation
+    mapElevation
   );
 
   if (maplibre.getLayer('3d-model')) {
@@ -388,6 +383,9 @@ async function loadModelToMap(coords: Coords) {
     fragments.update();
   });
 
+  const elevationValue = altitudeSlider.value;
+  const elevationNumber = parseFloat(elevationValue);
+
   const customLayer: CustomLayerInterface = {
     id: '3d-model',
     type: 'custom',
@@ -395,12 +393,20 @@ async function loadModelToMap(coords: Coords) {
 
     onAdd() {
       layerRenderer.autoClear = false;
+      angleSlider.value = rotation?.toString() ?? '0';
+      anglelabel.textContent = angleSlider.value.toString();
+      altitudeLabel.textContent = altitudeSlider.value.toString();
     },
 
     render(_, matrix) {
-      const angleValue = angleSlider.value;
-      const angleNumber = parseFloat(angleValue);
+      const angleNumber = parseFloat(angleSlider.value);
       const angleInRadians = (angleNumber * Math.PI) / -180;
+
+      const altitudeValue = altitudeSlider.value;
+      const altitudeNumber = parseFloat(altitudeValue);
+      dynamicAltitude = altitudeNumber;
+      const altitude = mapElevation + dynamicAltitude;
+      altitudeLabel.textContent = altitude.toFixed(1).toString();
 
       const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(
         sceneOrigin,
@@ -423,14 +429,6 @@ async function loadModelToMap(coords: Coords) {
         new THREE.Vector3(0, 1, 0),
         angleInRadians
       );
-
-      altitude =
-        maplibre.queryTerrainElevation(modelLocation) !== null
-          ? (maplibre.queryTerrainElevation(modelLocation) ?? 0) +
-            dynamicAltitude
-          : dynamicAltitude;
-
-      altitudeLabel.textContent = altitude.toFixed(1).toString();
 
       const m = new THREE.Matrix4().fromArray(
         matrix.defaultProjectionData.mainMatrix
@@ -503,7 +501,7 @@ async function loadModelToMap(coords: Coords) {
   maplibre.flyTo({
     center: [coords.lng, coords.lat],
     zoom: 18.5,
-    speed: 1, // Adjust the speed of the flyTo animation
+    speed: 2, // Adjust the speed of the flyTo animation
     curve: 1.42, // Adjust the curve of the flyTo animation
     easing: (t) => t, // Linear easing
   });
@@ -567,14 +565,7 @@ proj4.defs(
 );
 
 // Sample UTM coordinate in Ottawa (EPSG:26918)
-// const utmCoord = [445325.701, 5025571.622]; // [Easting, Northing] Paterson Hall
-// const utmCoord = [445518.6, 5026017.2]; // [Easting, Northing] Center of Carleton University
 const utmCoord = [367931.6, 5027647]; // [Easting, Northing] Fire hydrant? coordinate system?
-// const elevation = 59.1; // Elevation in meters (example value)
-// const ifcDirection = [-0.707106781186548, 0.707106781186548];
-// const ifcDirectionToDegree = ifcDirectionToDegrees({
-//   DirectionRatios: ifcDirection,
-// }).degrees;
 
 // Transform to WGS84 (EPSG:4326)
 // const wgs84Coord = proj4(`EPSG:269${zone}`, 'EPSG:4326', utmCoord);
