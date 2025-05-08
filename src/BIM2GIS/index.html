@@ -116,13 +116,15 @@
             placeholder="Y (Lat)"
           />
           <div>
-            <button>Relocate</button>
+            <button id="relocate">Relocate</button>
             <button id="download-frag">Download</button>
             <button id="remove-all">X</button>
           </div>
         </div>
       </div>
-      <button id="toggle-button">⚙️</button>
+      <button class="button ui" id="toggle-button" >
+        <i data-lucide="settings"></i>
+      </button>
       <script>
         document
           .getElementById('toggle-button')
@@ -136,10 +138,10 @@
     <body>
       <div class="map-toolbar-container">
       <div class="map-toolbar">
-        <a class="button circular" id="map-view" title="Map view">
+        <a class="button ui" id="map-view" title="Map view">
           <i data-lucide="map"></i>
         </a>
-        <a class="button circular" id="home" title="Go to home" href="../../">
+        <a class="button ui" id="home" title="Go to home" href="../../">
           <i data-lucide="home"></i>
         </a>
       </div>

@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import * as OBC from '@thatopen/components';
 import * as FRAGS from '@thatopen/fragments';
+import * as WEBIFC from 'web-ifc';
 import Stats from 'stats.js';
 // You have to import * as FRAGS from "@thatopen/fragments"
 import maplibregl, {
@@ -113,6 +114,9 @@ const getModelsIds = () => {
 
 let holdPopup = false;
 const fileInput = document.getElementById('file-input') as HTMLInputElement;
+const relocateButton = document.getElementById('relocate') as HTMLButtonElement;
+const inputX = document.getElementById('x-input') as HTMLInputElement;
+const inputY = document.getElementById('y-input') as HTMLInputElement;
 
 fileInput.addEventListener('change', async (event) => {
   console.log('File input changed: ', event);
@@ -181,20 +185,21 @@ const onDownloadModel = async () => {
 const clearUiInputs = () => {
   if (angleSlider) angleSlider.value = '0';
   if (altitudeSlider) altitudeSlider.value = '0';
+  if (inputX) inputX.value = '';
+  if (inputY) inputY.value = '';
+  if (fileInput) fileInput.value = '';
   modelTools.style.display = 'none';
 };
 
 /* 🛡️ Prevent Memory Leaks
 Here's a utility function to help you manage this effectively */
-const disposeModels = async (ids = getModelsIds()) => {
-  const promises = [];
-  models = [];
+const disposeModels = async () => {
   clearUiInputs();
+  models = [];
   removeModelFromMap();
-
-  for (const id of ids) promises.push(fragments.disposeModel(id));
-  for (const id of ids) promises.push(fragments.disposeModel(`${id}@map`));
-  await Promise.all(promises);
+  world.dispose();
+  fragments.dispose();
+  window.location.reload();
 };
 
 // MAPLIBRE 🌎🌎
@@ -300,7 +305,9 @@ const loadModel = async (ifcData: IfcData) => {
 };
 
 const removeAll = document.getElementById('remove-all') as HTMLButtonElement;
-removeAll.addEventListener('click', async () => disposeModels());
+removeAll.addEventListener('click', async () => {
+  await disposeModels();
+});
 
 // ⏱️ Measuring the performance
 
@@ -312,12 +319,33 @@ stats.dom.style.zIndex = 'unset';
 world.renderer.onBeforeUpdate.add(() => stats.begin());
 world.renderer.onAfterUpdate.add(() => stats.end());
 
-// const { coords } = building.location;
 let origin = {
   lng: -75.69835199446455,
   lat: 45.38152527897171,
 };
 let coords: Coords;
+
+// Relocate button to set new coordinates
+relocateButton.addEventListener('click', () => {
+  const x = parseFloat(inputX.value);
+  const y = parseFloat(inputY.value);
+  if (!(x && y)) return;
+
+  // Detect if the input coordinates are in longitude/latitude or another CRS
+  const isLngLat = (x: number, y: number): boolean => {
+    return x >= -180 && x <= 180 && y >= -90 && y <= 90;
+  };
+
+  if (isLngLat(x, y)) {
+    coords = { lng: x, lat: y };
+  } else {
+    const [lng, lat] = proj4(`EPSG:2951`, 'EPSG:4326', [x, y]);
+    coords = { lng, lat };
+  }
+
+  loadModelToMap(coords);
+  setMarker(coords);
+});
 
 let sceneOrigin = new maplibregl.LngLat(origin.lng, origin.lat);
 
@@ -556,8 +584,6 @@ const utmCoord = [367931.6, 5027647]; // [Easting, Northing] Fire hydrant? coord
 // const wgs84Coord = proj4(`EPSG:269${zone}`, 'EPSG:4326', utmCoord);
 const wgs84Coord = proj4(`EPSG:2951`, 'EPSG:4326', utmCoord);
 
-// setMarker({ lng: wgs84Coord[0], lat: wgs84Coord[1] });
-
 const crsReport = `Current map longitude: ${lng}, 
 UTM Zone: ${zone} → EPSG:269${zone} 
 MTM Zone 9: EPSG:2951 
@@ -567,6 +593,12 @@ WGS84 Coordinates: ${wgs84Coord}
 console.log(crsReport);
 
 const serializer = new FRAGS.IfcImporter();
+serializer.classes.abstract.add(
+  WEBIFC.IFCMAPCONVERSION,
+  WEBIFC.IFCDIRECTION,
+  WEBIFC.IFCGEOMETRICREPRESENTATIONCONTEXT,
+  WEBIFC.IFCPROJECTEDCRS
+);
 serializer.wasm = { absolute: true, path: 'https://unpkg.com/web-ifc@0.0.68/' };
 let fragmentBytes: ArrayBuffer | null = null;
 let onConversionFinish = () => {};
