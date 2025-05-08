@@ -1,0 +1,55 @@
+.map-toolbar-container {
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
+  pointer-events: none;
+  bottom: 1rem;
+  z-index: 10;
+}
+
+.map-toolbar {
+  gap: 0.3rem;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  border-radius: 0.3rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 1px;
+}
+
+.ui {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: var(--blur-filter);
+  pointer-events: all;
+  cursor: pointer;
+  border-radius: 0.3rem;
+  padding: 0.3rem;
+  scale: 0.7;
+}
+
+.ui:hover {
+  background-color: #f0f0f0;
+}
+
+.ui > svg {
+  color: black;
+}
+
+.ui:hover > svg {
+  color: black;
+}
+
+#tools {
+  display: flex;
+  background-color: white;
+  position: absolute;
+  bottom: 1rem;
+  right: 0.5rem;
+  border-radius: 0.5rem;
+  align-items: flex-end;
+}
