@@ -369,6 +369,7 @@ async function loadModelToMap(coords: Coords) {
   mapElevation = elevation ?? maplibre.queryTerrainElevation(coords) ?? 0;
   sceneOrigin = new maplibregl.LngLat(lng, lat);
   angleSlider.value = String(rotation) ?? 0;
+  console.log('Loading model to map: ', coords, rotation, elevation);
 
   const modelAsMercatorCoordinate = maplibregl.MercatorCoordinate.fromLngLat(
     coords,
@@ -402,7 +403,8 @@ async function loadModelToMap(coords: Coords) {
       layerRenderer.autoClear = false;
       angleSlider.value = rotation?.toString() ?? '0';
       anglelabel.textContent = angleSlider.value.toString();
-      altitudeLabel.textContent = altitudeSlider.value.toString();
+      const terrainElevation = maplibre.queryTerrainElevation(coords) ?? 0;
+      altitudeLabel.textContent = terrainElevation.toString();
     },
 
     render(_, matrix) {
@@ -412,8 +414,9 @@ async function loadModelToMap(coords: Coords) {
       const altitudeValue = altitudeSlider.value;
       const altitudeNumber = parseFloat(altitudeValue);
       dynamicAltitude = altitudeNumber;
-      const altitude = mapElevation + dynamicAltitude;
-      altitudeLabel.textContent = altitude.toFixed(1).toString();
+      const terrainElevation = maplibre.queryTerrainElevation(coords) ?? 0;
+      const altitude = terrainElevation + dynamicAltitude;
+      altitudeLabel.textContent = terrainElevation.toFixed(2).toString();
 
       const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(
         sceneOrigin,
@@ -669,6 +672,7 @@ function extractMapConversionValues(
   const x = parseFloat(match[1]);
   const y = parseFloat(match[2]);
   const z = parseFloat(match[3]);
+  // const rotation = [parseFloat(match[4]), parseFloat(match(5))]
 
   const result: { x: number; y: number; z: number } = { x, y, z };
   return result;
