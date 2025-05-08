@@ -106,12 +106,6 @@ bimContainer.addEventListener('click', async (event) => {
   fragments.update(true);
 });
 
-const getModelsIds = () => {
-  const models = fragments.models.list.values();
-  const ids = [...models].map((model) => model.modelId);
-  return ids;
-};
-
 let holdPopup = false;
 const fileInput = document.getElementById('file-input') as HTMLInputElement;
 const relocateButton = document.getElementById('relocate') as HTMLButtonElement;
@@ -560,8 +554,7 @@ function stopResizing(): void {
   document.removeEventListener('mouseup', stopResizing);
 }
 
-// PROJ4 to convert between coordinate systems
-
+// PROJ4 to convert between coordinate systems -------------------------------
 // PROJ4 Definitions
 const currentCoord = maplibre.getCenter();
 const { lng } = currentCoord;
