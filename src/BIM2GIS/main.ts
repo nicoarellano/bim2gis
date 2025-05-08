@@ -604,10 +604,11 @@ export const convertIFC = async (file: File): Promise<IfcData | null> => {
   const ifcLines = new TextDecoder().decode(ifcBuffer).split('\n');
   const mapConversionValues = extractMapConversionValues(ifcLines);
   const epgsCode = extractEPSGFromIFC(ifcLines);
-  const rotation = getRotation(ifcLines);
-  const rotationDegrees = rotation
-    ? ifcDirectionToDegrees({ DirectionRatios: rotation }).degrees
-    : 0;
+
+  let { rotation } = mapConversionValues || {};
+
+  rotation ?? getRotation(ifcLines);
+  const rotationDegrees = rotation;
 
   const ifcBytes = new Uint8Array(ifcBuffer);
   // @ts-ignore
@@ -656,9 +657,9 @@ function extractEPSGFromIFC(lines: string[]): string | null {
 
 function extractMapConversionValues(
   ifcLines: string[]
-): { x: number; y: number; z: number } | null {
+): { x: number; y: number; z: number; rotation: number } | null {
   const mapConversionRegex =
-    /#\d+=IFCMAPCONVERSION\([^,]+,[^,]+,([\d.-]+),([\d.-]+),([\d.-]+)/;
+    /#\d+=IFCMAPCONVERSION\([^,]+,[^,]+,([\d.-]+),([\d.-]+),([\d.-]+),([\d.-]+),([\d.-]+)/;
 
   const mapConversionLine = ifcLines.find((line) =>
     mapConversionRegex.test(line)
@@ -672,13 +673,27 @@ function extractMapConversionValues(
   const x = parseFloat(match[1]);
   const y = parseFloat(match[2]);
   const z = parseFloat(match[3]);
-  // const rotation = [parseFloat(match[4]), parseFloat(match(5))]
+  const angles: [number, number] = [
+    parseFloat(match[5] ?? '0'),
+    parseFloat(match[4] ?? '0'),
+  ];
+  console.log('Angles: ', angles);
 
-  const result: { x: number; y: number; z: number } = { x, y, z };
+  const rotation =
+    ifcDirectionToDegrees({ DirectionRatios: angles }).degrees ?? 0;
+
+  console.log('Rotation: ', rotation);
+
+  const result: {
+    x: number;
+    y: number;
+    z: number;
+    rotation: number;
+  } = { x, y, z, rotation };
   return result;
 }
 
-function getRotation(ifcLines: string[]): number[] | null {
+function getRotation(ifcLines: string[]): number | null {
   const contextRegex =
     /#\d+=IFCGEOMETRICREPRESENTATIONCONTEXT\([^,]+,[^,]+,[^,]+,[^,]+,[^,]+,(#[\d]+)\)/;
 
@@ -701,5 +716,8 @@ function getRotation(ifcLines: string[]): number[] | null {
   const x = parseFloat(directionMatch[1]);
   const y = parseFloat(directionMatch[2]);
 
-  return [x, y]; // Return the array of two numbers
+  const rotation =
+    ifcDirectionToDegrees({ DirectionRatios: [x, y] }).degrees ?? 0;
+
+  return rotation;
 }
