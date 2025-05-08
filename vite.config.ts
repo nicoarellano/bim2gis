@@ -17,6 +17,7 @@ export default defineConfig({
         maplibre: resolve(__dirname, 'src/Maplibre/index.html'),
         maplibreThree: resolve(__dirname, 'src/Maplibre+Three/index.html'),
         three: resolve(__dirname, 'src/Three/index.html'),
+        bim: resolve(__dirname, 'src/BIM/index.html'),
       },
     },
   },
