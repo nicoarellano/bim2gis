@@ -12,21 +12,31 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
     />
-    <link rel="icon" href="/bim2gis/resources/favicon.ico" type="image/x-icon" />
+    <link
+      rel="icon"
+      href="/bim2gis/resources/favicon.ico"
+      type="image/x-icon"
+    />
     <title>CIMS Maplibre example</title>
     <link rel="stylesheet" href="../../style.css" />
   </head>
 
   <body>
-    <div class="bim" id="bim-container" style="width: 50%"></div>
-    <div id="map-container" style="width: 50%"></div>
+    <div class="bim" id="bim-container" style="width: 1%"></div>
+    <input
+      type="file"
+      id="file-input"
+      accept=".ifc,.frag"
+      style="visibility: hidden"
+    />
+    <div id="map-container" style="width: 99%"></div>
     <div
       id="canvas-slider"
       style="
         position: absolute;
         top: 0;
         bottom: 0;
-        left: 49.9%;
+        left: 1%;
         width: 5px;
         background-color: rgba(0, 0, 0, 0.5);
         cursor: ew-resize;
@@ -66,62 +76,63 @@
       ></span>
     </div>
     <div id="inputs-container">
-      <input
-        type="file"
-        id="file-input"
-        accept=".ifc,.frag"
-        style="visibility: hidden;"
-      />
+      <div
+        id="loading"
+        style="display: flex; align-items: center; justify-content: center"
+      >
+        <p style="margin-right: 0.5rem">Loading</p>
+        <img
+          src="../../resources/utils/line-md--uploading-loop.svg"
+          alt="Loading animation"
+          style="width: 24px; height: 24px"
+        />
+      </div>
 
-        <div
-          id="model-tools"
-        >
-          <label class="input-label" id="angle-label">
-            IFC rotation: <span id="angle">0</span>°
-          </label>
-          <input
-            id="angle-slider"
-            type="range"
-            min="0"
-            max="360"
-            step="1"
-            value="0"
-            oninput="document.getElementById('angle').textContent = this.value"
-          />
-          <label class="input-label" id="altitude-label">
-            IFC elev: <span id="altitude">0</span> mts
-          </label>
-          <input
-            id="altitude-slider"
-            type="range"
-            min="-100"
-            max="100"
-            step="01"
-            value="0"
-            oninput="document.getElementById('altitude').textContent = this.value"
-          />
-          <input
-            type="number"
-            id="x-input"
-            step="0.00000000001"
-            placeholder="X (Lng)"
-          />
-          <input
-            type="number"
-            id="y-input"
-            step="0.00000000001"
-            placeholder="Y (Lat)"
-          />
-          <div>
-            <button id="relocate">Relocate</button>
-            <button id="download-frag">Download</button>
-            <button id="remove-all">X</button>
-          </div>
+      <div id="model-tools">
+        <label class="input-label" id="angle-label">
+          IFC rotation: <span id="angle">0</span>°
+        </label>
+        <input
+          id="angle-slider"
+          type="range"
+          min="0"
+          max="360"
+          step="1"
+          value="0"
+          oninput="document.getElementById('angle').textContent = this.value"
+        />
+        <label class="input-label" id="altitude-label">
+          IFC elev: <span id="altitude">0</span> mts
+        </label>
+        <input
+          id="altitude-slider"
+          type="range"
+          min="-100"
+          max="100"
+          step="01"
+          value="0"
+          oninput="document.getElementById('altitude').textContent = this.value"
+        />
+        <input
+          type="number"
+          id="x-input"
+          step="0.00000000001"
+          placeholder="X (Lng)"
+        />
+        <input
+          type="number"
+          id="y-input"
+          step="0.00000000001"
+          placeholder="Y (Lat)"
+        />
+        <div>
+          <button id="relocate">Relocate</button>
+          <button id="download-frag">Download</button>
+          <button id="remove-all">X</button>
         </div>
-      
+      </div>
     </div>
-    <body>
-      <div class="map-toolbar-container">
+    <div class="map-toolbar-container">
       <div class="map-toolbar">
         <a class="button ui" id="two-viewers" title="Map view">
           <i data-lucide="columns2"></i>
@@ -142,7 +153,7 @@
           rel="noopener noreferrer"
         >
           <i data-lucide="github"></i>
-        </a>        
+        </a>
         <a class="button ui" id="tool-button" title="Tool View">
           <i data-lucide="settings"></i>
         </a>
@@ -153,28 +164,30 @@
           <i data-lucide="home"></i>
         </a>
       </div>
-      </div>
+    </div>
 
-      <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-      <script>
-        lucide.createIcons();
-      </script>
-      <script>
-        let toolsVisible = false;
-        const inputsContainer = document.getElementById('inputs-container');
-          document.getElementById('upload-file').addEventListener('click', () => {
-            document.getElementById('file-input').click(); 
-          });
-          document.getElementById('file-input').addEventListener('change', () => {
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+      lucide.createIcons();
+    </script>
+    <script>
+      let toolsVisible = false;
+      const inputsContainer = document.getElementById('inputs-container');
+      document.getElementById('upload-file').addEventListener('click', () => {
+        document.getElementById('file-input').click();
+      });
+      document.getElementById('file-input').addEventListener('change', () => {
+        if (document.getElementById('file-input').files.length > 0) {
           toolsVisible = true;
           inputsContainer.style.visibility = 'visible';
-        });
-        document.getElementById('tool-button').addEventListener('click', () => {
-          console.log('toolsVisible', toolsVisible);
-          toolsVisible = !toolsVisible
-          inputsContainer.style.visibility = toolsVisible ? 'visible' : 'hidden';
-        });
-      </script>
+        }
+      });
+      document.getElementById('tool-button').addEventListener('click', () => {
+        console.log('toolsVisible', toolsVisible);
+        toolsVisible = !toolsVisible;
+        inputsContainer.style.visibility = toolsVisible ? 'visible' : 'hidden';
+      });
+    </script>
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

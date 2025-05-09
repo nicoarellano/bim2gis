@@ -28,6 +28,9 @@
         padding: 0;
         display: grid; /* Use grid layout */
         grid-template-columns: repeat(2, 1fr); /* Default to 2 columns */
+        grid-auto-flow: column;
+        grid-template-rows: repeat(4, auto); /* Default to 2 rows */
+        list-style: none;
         gap: 2rem; /* Add space between items */
         justify-items: center; /* Center items horizontally */
         align-items: center; /* Center items vertically */
@@ -71,15 +74,26 @@
         </a>
       </li>
       <li>
-        <a href="./src/Three/">
-          <img src="./resources/images/threejs.png" alt="Three.js" />
-        </a>
-      </li>
-      <li>
         <a href="./src/Leaflet/">
           <img src="./resources/images/leaflet.png" alt="Leaflet" />
         </a>
       </li>
+      <li>
+        <a href="./src/Mapbox/">
+          <img src="./resources/images/mapbox.png" alt="Mapbox GL JS" />
+        </a>
+      </li>
+      <li>
+        <a href="./src/Maplibre/">
+          <img src="./resources/images/maplibre.png" alt="Maplibre GL JS" />
+        </a>
+      </li>
+      <li>
+        <a href="./src/Three/">
+          <img src="./resources/images/threejs.png" alt="Three.js" />
+        </a>
+      </li>
+
       <li>
         <a href="./src/Maplibre+Three/">
           <img
@@ -89,21 +103,11 @@
         </a>
       </li>
       <li>
-        <a href="./src/Mapbox/">
-          <img src="./resources/images/mapbox.png" alt="Mapbox GL JS" />
-        </a>
-      </li>
-      <li>
         <a href="./src/BIM/">
           <img
             src="./resources/images/toc logo.png"
             alt="BIM: IFC.js and That Open Company"
           />
-        </a>
-      </li>
-      <li>
-        <a href="./src/Maplibre/">
-          <img src="./resources/images/maplibre.png" alt="Maplibre GL JS" />
         </a>
       </li>
 

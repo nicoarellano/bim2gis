@@ -71,13 +71,13 @@ body {
 }
 
 .bim {
-  width: 50vw;
+  width: 1vw;
   height: 100vh;
   overflow: hidden;
 }
 
 #map-container {
-  width: 50vw;
+  width: 99vw;
   height: 100vh;
   position: absolute;
   top: 0;
@@ -96,7 +96,6 @@ body {
   width: 180px;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   z-index: 10;
   font-size: 0.8rem;
   padding: 1rem;
