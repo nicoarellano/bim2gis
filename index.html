@@ -17,49 +17,98 @@
         text-align: center;
         color: #444;
       }
+      h3 {
+        text-align: center;
+        color: #616161;
+        margin-bottom: 1rem;
+      }
 
       ul {
         list-style-type: none;
         padding: 0;
-        display: flex;
-        flex-direction: column;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
+        display: grid; /* Use grid layout */
+        grid-template-columns: repeat(2, 1fr); /* Default to 2 columns */
+        gap: 2rem; /* Add space between items */
+        justify-items: center; /* Center items horizontally */
+        align-items: center; /* Center items vertically */
+        max-width: 50%; /* Limit width to 50% */
+        margin: 0 auto; /* Center the grid on the page */
+      }
+
+      @media (max-width: 768px) {
+        ul {
+          grid-template-columns: 1fr; /* Switch to 1 column on smaller screens */
+          gap: 1.4rem; /* Add space between items */
+        }
       }
 
       li {
         margin: 0;
       }
 
-      a {
-        text-decoration: none;
-        color: white;
-        background-color: #0078ae;
-        padding: 10px 20px;
-        border-radius: 5px;
-        font-size: 16px;
-        transition: background-color 0.3s ease;
-        display: inline-block;
+      a img {
+        width: 140px; /* Set a consistent width */
+        height: auto; /* Maintain aspect ratio */
+        transition: transform 0.3s ease;
       }
 
-      a:hover {
-        background-color: #006494;
+      a img:hover {
+        transform: scale(1.1);
+        filter: drop-shadow(2px 2px 5px rgba(100, 100, 100, 0.2));
       }
     </style>
   </head>
   <body>
-    <h2>BIM TO GIS: OPEN SOURCE TECH STACK</h2>
+    <h2>BIM TO GIS</h2>
+    <h3>OPEN SOURCE TECH STACK</h3>
     <ul>
-      <li><a href="./src/Cesium/">Cesium</a></li>
-      <li><a href="./src/Leaflet/">Leaflet</a></li>
-      <li><a href="./src/Mapbox/">Mapbox GL JS</a></li>
-      <li><a href="./src/Maplibre/">Maplibre GL JS</a></li>
-      <li><a href="./src/Three/">Three.js</a></li>
-      <li><a href="./src/Maplibre+Three/">Maplibre + Three.js</a></li>
-      <li><a href="./src/BIM/">BIM: IFC.js and That Open Company</a></li>
-      <li><a href="./src/BIM2GIS/">BIM to GIS</a></li>
+      <li>
+        <a href="./src/Cesium/">
+          <img src="./resources/images/cesium.png" alt="Cesium" />
+        </a>
+      </li>
+      <li>
+        <a href="./src/Three/">
+          <img src="./resources/images/threejs.png" alt="Three.js" />
+        </a>
+      </li>
+      <li>
+        <a href="./src/Leaflet/">
+          <img src="./resources/images/leaflet.png" alt="Leaflet" />
+        </a>
+      </li>
+      <li>
+        <a href="./src/Maplibre+Three/">
+          <img
+            src="./resources/images/maplibre+threejs.png"
+            alt="Maplibre + Three.js"
+          />
+        </a>
+      </li>
+      <li>
+        <a href="./src/Mapbox/">
+          <img src="./resources/images/mapbox.png" alt="Mapbox GL JS" />
+        </a>
+      </li>
+      <li>
+        <a href="./src/BIM/">
+          <img
+            src="./resources/images/toc logo.png"
+            alt="BIM: IFC.js and That Open Company"
+          />
+        </a>
+      </li>
+      <li>
+        <a href="./src/Maplibre/">
+          <img src="./resources/images/maplibre.png" alt="Maplibre GL JS" />
+        </a>
+      </li>
+
+      <li>
+        <a href="./src/BIM2GIS/">
+          <img src="./resources/images/maplibre+toc.png" alt="BIM to GIS" />
+        </a>
+      </li>
     </ul>
   </body>
 </html>
