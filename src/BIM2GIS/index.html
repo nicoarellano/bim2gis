@@ -65,19 +65,16 @@
         "
       ></span>
     </div>
-    <div id="tools">
-      <div id="inputs-container">
-        <input
-          type="file"
-          id="file-input"
-          accept=".ifc,.frag"
-          style="width: 11rem"
-        />
-        <!-- <button id="load-pa">Load PA</button>
-        <button id="load-bb">Load BB</button> -->
+    <div id="inputs-container">
+      <input
+        type="file"
+        id="file-input"
+        accept=".ifc,.frag"
+        style="visibility: hidden;"
+      />
+
         <div
           id="model-tools"
-          style="display: none; flex-direction: column; gap: 0.5rem"
         >
           <label class="input-label" id="angle-label">
             IFC rotation: <span id="angle">0</span>°
@@ -121,19 +118,7 @@
             <button id="remove-all">X</button>
           </div>
         </div>
-      </div>
-      <button class="button ui" id="toggle-button" >
-        <i data-lucide="settings"></i>
-      </button>
-      <script>
-        document
-          .getElementById('toggle-button')
-          .addEventListener('click', () => {
-            const inputsContainer = document.getElementById('inputs-container');
-            inputsContainer.style.display =
-              inputsContainer.style.display === 'none' ? 'flex' : 'none';
-          });
-      </script>
+      
     </div>
     <body>
       <div class="map-toolbar-container">
@@ -147,6 +132,7 @@
         <a class="button ui" id="map-viewer" title="Map view">
           <i data-lucide="map"></i>
         </a>
+
         <a
           class="button ui"
           id="github-link"
@@ -156,6 +142,12 @@
           rel="noopener noreferrer"
         >
           <i data-lucide="github"></i>
+        </a>        
+        <a class="button ui" id="tool-button" title="Tool View">
+          <i data-lucide="settings"></i>
+        </a>
+        <a class="button ui" id="upload-file" title="Upload File">
+          <i data-lucide="upload"></i>
         </a>
         <a class="button ui" id="home" title="Go to home" href="../../">
           <i data-lucide="home"></i>
@@ -166,6 +158,22 @@
       <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
       <script>
         lucide.createIcons();
+      </script>
+      <script>
+        let toolsVisible = false;
+        const inputsContainer = document.getElementById('inputs-container');
+          document.getElementById('upload-file').addEventListener('click', () => {
+            document.getElementById('file-input').click(); 
+          });
+          document.getElementById('file-input').addEventListener('change', () => {
+          toolsVisible = true;
+          inputsContainer.style.visibility = 'visible';
+        });
+        document.getElementById('tool-button').addEventListener('click', () => {
+          console.log('toolsVisible', toolsVisible);
+          toolsVisible = !toolsVisible
+          inputsContainer.style.visibility = toolsVisible ? 'visible' : 'hidden';
+        });
       </script>
     <script type="module" src="./main.ts"></script>
   </body>

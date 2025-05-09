@@ -149,6 +149,10 @@ fileInput.addEventListener('change', async (event) => {
   }
   if (!ifcData) return;
   loadModel(ifcData);
+  const toolsContainer = document.getElementById(
+    'tools-container'
+  ) as HTMLDivElement;
+  toolsContainer.style.visibility = 'visible';
 });
 
 const angleSlider = document.getElementById('angle-slider') as HTMLInputElement;
