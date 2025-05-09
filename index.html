@@ -9,7 +9,7 @@
       body {
         font-family: Arial, sans-serif;
         margin: 20px;
-        background-color: #f4f4f9;
+        background-color: white;
         color: #333;
       }
 
@@ -35,19 +35,12 @@
         margin: 0 auto; /* Center the grid on the page */
       }
 
-      @media (max-width: 768px) {
-        ul {
-          grid-template-columns: 1fr; /* Switch to 1 column on smaller screens */
-          gap: 1.4rem; /* Add space between items */
-        }
-      }
-
       li {
         margin: 0;
       }
 
       a img {
-        width: 140px; /* Set a consistent width */
+        width: 300px; /* Set a consistent width */
         height: auto; /* Maintain aspect ratio */
         transition: transform 0.3s ease;
       }
@@ -55,6 +48,16 @@
       a img:hover {
         transform: scale(1.1);
         filter: drop-shadow(2px 2px 5px rgba(100, 100, 100, 0.2));
+      }
+
+      @media (max-width: 768px) {
+        ul {
+          grid-template-columns: 1fr; /* Switch to 1 column on smaller screens */
+          gap: 1.4rem; /* Add space between items */
+        }
+        a img {
+          width: 140px; /* Set a consistent width */
+        }
       }
     </style>
   </head>
