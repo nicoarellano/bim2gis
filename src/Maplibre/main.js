@@ -11,6 +11,7 @@ const map = new maplibregl.Map({
   zoom: 3, // starting zoom
   antialias: true,
   maplibreLogo: true,
+  attributionControl: false,
 });
 
 // Go To Site 🏢

@@ -8,7 +8,9 @@ const map = new maplibregl.Map({
   zoom: 3,
   center: [-98.74, 56.415],
   pitch: 0,
-  canvasContextAttributes: { antialias: true }, // create the gl context with MSAA antialiasing, so custom layers are antialiased
+  canvasContextAttributes: { antialias: true }, // create the gl context with MSAA antialiasing, so custom layers are
+  attributionControl: false,
+  antialias: true,
 });
 
 // Go To Site 🏢
