@@ -19,7 +19,7 @@ import proj4 from 'proj4';
 interface Coords {
   lng: number;
   lat: number;
-  elevation?: number;
+  OrthogonalHeihgt?: number;
   rotation?: number;
 }
 
@@ -70,10 +70,12 @@ world.camera.controls.addEventListener('rest', () => fragments.update(true));
 world.camera.controls.addEventListener('update', () => fragments.update());
 
 interface MapConversions {
-  x: number | null;
-  y: number | null;
-  z: number | null;
-  rotation: number | null;
+  Eastings: number | undefined;
+  Northings: number | undefined;
+  OrthogonalHeight?: number | undefined;
+  XAxisAbscissa?: number | undefined;
+  XAxisOrdinate?: number | undefined;
+  rotation?: number | undefined;
 }
 interface IfcData {
   model: FRAGS.FragmentsModel;
@@ -287,18 +289,23 @@ const loadModel = async (ifcData: IfcData) => {
   fragments.update(true);
 
   if (mapConversionValues) {
-    const { x, y, z } = mapConversionValues;
-    if (!(x && y)) return;
+    const { Eastings, Northings, OrthogonalHeight } = mapConversionValues;
+    if (!(Eastings && Northings)) return;
 
-    const wgs84Coord = proj4(`EPSG:2951`, 'EPSG:4326', [x, y]);
+    const wgs84Coord = proj4(`EPSG:2951`, 'EPSG:4326', [Eastings, Northings]);
     const [lng, lat] = wgs84Coord;
-    coords = { lng, lat, elevation: z ?? 0, rotation: rotationDegrees };
+    coords = {
+      lng,
+      lat,
+      OrthogonalHeihgt: OrthogonalHeight || 0,
+      rotation: rotationDegrees || 0,
+    };
 
     setMarker({ lng, lat });
     loadModelToMap(coords);
     modelTools.style.display = 'flex';
 
-    modelElevation = mapConversionValues.z ?? 0;
+    modelElevation = mapConversionValues.OrthogonalHeight ?? 0;
   } else {
     maplibre.getCanvas().style.cursor = 'crosshair';
     holdPopup = true;
@@ -372,7 +379,7 @@ let bimCamera = world.camera.three;
 let currentCamera = bimCamera;
 
 async function loadModelToMap(coords: Coords) {
-  const { lng, lat, rotation, elevation } = coords;
+  const { lng, lat, rotation, OrthogonalHeihgt: elevation } = coords;
   mapElevation = elevation ?? maplibre.queryTerrainElevation(coords) ?? 0;
   sceneOrigin = new maplibregl.LngLat(lng, lat);
   angleSlider.value = String(rotation) ?? 0;
@@ -615,21 +622,6 @@ proj4.defs(
   '+proj=tmerc +lat_0=0 +lon_0=-76.5 +k=0.9999 +x_0=304800 +y_0=0 +ellps=GRS80 +towgs84=-0.991,1.9072,0.5129,-1.25033e-07,-4.6785e-08,-5.6529e-08,0 +units=m +no_defs +type=crs'
 );
 
-// Sample UTM coordinate in Ottawa (EPSG:26918)
-const utmCoord = [367931.6, 5027647]; // [Easting, Northing] Fire hydrant? coordinate system?
-
-// Transform to WGS84 (EPSG:4326)
-// const wgs84Coord = proj4(`EPSG:269${zone}`, 'EPSG:4326', utmCoord);
-const wgs84Coord = proj4(`EPSG:2951`, 'EPSG:4326', utmCoord);
-
-const crsReport = `Current map longitude: ${lng}, 
-UTM Zone: ${zone} → EPSG:269${zone} 
-MTM Zone 9: EPSG:2951 
-UTM Coords: ${utmCoord} 
-WGS84 Coordinates: ${wgs84Coord}
-`;
-console.log(crsReport);
-
 const serializer = new FRAGS.IfcImporter();
 serializer.classes.abstract.add(
   WEBIFC.IFCMAPCONVERSION,
@@ -658,55 +650,48 @@ export const convertIFC = async (file: File): Promise<IfcData | null> => {
   if (localIds.length === 0) return null;
 
   const ifcMapConversionData = await model.getItemsData(localIds);
-  const {
-    Eastings,
-    Northings,
-    OrthogonalHeight,
-    XAxisAbscissa,
-    XAxisOrdinate,
-  } = ifcMapConversionData[0];
-  const mapConversionValues: MapConversions = {
-    x: Array.isArray(Eastings) ? null : Eastings?.value ?? null,
-    y: Array.isArray(Northings) ? null : Northings?.value ?? null,
-    z: Array.isArray(OrthogonalHeight) ? null : OrthogonalHeight?.value ?? null,
-    rotation:
-      ifcDirectionToDegrees({
-        DirectionRatios: [
-          Array.isArray(XAxisOrdinate) ? 0 : XAxisOrdinate?.value ?? 0,
-          Array.isArray(XAxisAbscissa) ? 0 : XAxisAbscissa?.value ?? 0,
-        ],
-      }).degrees ?? null,
-  };
 
-  let { rotation } = mapConversionValues || {};
+  let mapConversionValues: MapConversions = {} as MapConversions;
+
+  const keys: (keyof MapConversions)[] = [
+    'Eastings',
+    'Northings',
+    'OrthogonalHeight',
+    'XAxisAbscissa',
+    'XAxisOrdinate',
+  ];
+
+  for (const key of keys) {
+    if (ifcMapConversionData[0][key]) {
+      const attribute = ifcMapConversionData[0][key];
+      if (attribute && !Array.isArray(attribute) && 'value' in attribute) {
+        mapConversionValues[key] = attribute.value;
+      }
+    }
+  }
+
+  console.log('Map Conversion Data: ', mapConversionValues);
+
+  const rotation = ifcDirectionToDegrees(
+    mapConversionValues.XAxisAbscissa,
+    mapConversionValues.XAxisOrdinate
+  );
 
   const rotationDegrees = rotation ?? 0;
-
-  console.log('Map Conversion Values: ', mapConversionValues);
-
   onConversionFinish();
   return { model, mapConversionValues, rotationDegrees };
 };
 
-export function ifcDirectionToDegrees(direction: {
-  DirectionRatios: number[] | null;
-}) {
-  if (
-    !direction ||
-    !direction.DirectionRatios ||
-    direction.DirectionRatios.length < 2
-  ) {
-    throw new Error('Invalid IFCDIRECTION object');
+export function ifcDirectionToDegrees(
+  XAxisAbscissa?: number,
+  XAxisOrdinate?: number
+): number {
+  if (XAxisAbscissa === undefined || XAxisOrdinate === undefined) {
+    return 0;
   }
 
-  const [x, y] = direction.DirectionRatios;
-  const radians = Math.atan2(x, y); // Invert the ratio by swapping x and y
-  const degrees = (radians * 180) / Math.PI;
-
-  return {
-    degrees: (degrees + 360) % 360, // Normalize to 0-360
-    radians,
-  };
+  const degrees = (Math.atan2(XAxisOrdinate, XAxisAbscissa) * 180) / Math.PI;
+  return (degrees + 360) % 360; // Normalize to 0-360
 }
 
 /*
