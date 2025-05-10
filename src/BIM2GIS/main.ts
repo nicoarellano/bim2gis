@@ -65,6 +65,7 @@ const workerFile = new File([new Blob([workerText])], 'worker.mjs', {
 });
 const url = URL.createObjectURL(workerFile);
 const fragments = new FRAGS.FragmentsModels(url);
+
 world.camera.controls.restThreshold = 0.005;
 world.camera.controls.addEventListener('rest', () => fragments.update(true));
 world.camera.controls.addEventListener('update', () => fragments.update());
@@ -121,22 +122,20 @@ const inputX = document.getElementById('x-input') as HTMLInputElement;
 const inputY = document.getElementById('y-input') as HTMLInputElement;
 
 fileInput.addEventListener('change', async (event) => {
-  console.log('File input changed: ', event);
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;
-  console.log('File: ', file);
   const buffer = await file.arrayBuffer();
   if (file.name.endsWith('.ifc')) {
-    const convertedModel = await convertIFC(file);
-    if (convertedModel) {
-      model = convertedModel.model;
-      const { mapConversionValues } = convertedModel;
+    const model = await convertIFC(file);
+    if (!model) return;
+    const modelData = await getMapConversionData(model);
+    if (modelData) {
+      const { mapConversionValues } = modelData;
       ifcData = {
         model,
         mapConversionValues,
-        rotationDegrees: convertedModel.rotationDegrees || 0,
+        rotationDegrees: modelData.rotationDegrees || 0,
       };
-      console.log('IFC Data: ', ifcData);
     } else {
       console.error('Failed to convert IFC file.');
       return;
@@ -149,10 +148,6 @@ fileInput.addEventListener('change', async (event) => {
   }
   if (!ifcData) return;
   loadModel(ifcData);
-  const toolsContainer = document.getElementById(
-    'tools-container'
-  ) as HTMLDivElement;
-  toolsContainer.style.visibility = 'visible';
 });
 
 const angleSlider = document.getElementById('angle-slider') as HTMLInputElement;
@@ -261,8 +256,6 @@ async function setMarker(coords: Coords) {
   }
   maplibre.addSource('places-source', source);
   maplibre.addLayer(layer);
-
-  console.log('Setting new marker: ', coords, layer, source);
 }
 
 const removeModelFromMap = () => {
@@ -276,7 +269,6 @@ const loadModel = async (ifcData: IfcData) => {
   const { model, mapConversionValues, rotationDegrees } = ifcData;
 
   const modelId = model.modelId;
-  console.log('Loading model: ', modelId);
 
   bbox = model.box;
   await world.camera.controls.fitToBox(bbox, false);
@@ -387,7 +379,6 @@ async function loadModelToMap(coords: Coords) {
   mapElevation = elevation ?? maplibre.queryTerrainElevation(coords) ?? 0;
   sceneOrigin = new maplibregl.LngLat(lng, lat);
   angleSlider.value = String(rotation) ?? 0;
-  console.log('Loading model to map: ', coords, rotation, elevation);
 
   const modelAsMercatorCoordinate = maplibregl.MercatorCoordinate.fromLngLat(
     coords,
@@ -406,7 +397,7 @@ async function loadModelToMap(coords: Coords) {
     currentCamera = bimCamera as THREE.PerspectiveCamera;
     world.camera.three = bimCamera;
   });
-  bimContainer.addEventListener('mouseleave', () => {
+  maplibre.on('mouseenter', () => {
     world.camera.controls.setLookAt(183, 50, -102, 27, -52, -11);
     if (bbox) world.camera.controls.fitToBox(bbox, false);
     fragments.update();
@@ -604,9 +595,9 @@ mapViewerButton.addEventListener('click', () => {
 });
 
 twoViewersButton.addEventListener('click', () => {
-  bimContainer.style.width = '50%';
-  mapContainer.style.width = '50%';
-  slider.style.left = '50%';
+  bimContainer.style.width = '1%';
+  mapContainer.style.width = '99%';
+  slider.style.left = '1%';
   updateWorldAspect();
 });
 
@@ -628,16 +619,20 @@ proj4.defs(
 
 const serializer = new FRAGS.IfcImporter();
 serializer.classes.abstract.add(
+  WEBIFC.IFCSITE,
   WEBIFC.IFCMAPCONVERSION,
-  WEBIFC.IFCDIRECTION,
   WEBIFC.IFCGEOMETRICREPRESENTATIONCONTEXT,
   WEBIFC.IFCPROJECTEDCRS
 );
+serializer.attributesToExclude.add('IFCDOOR');
+
 serializer.wasm = { absolute: true, path: 'https://unpkg.com/web-ifc@0.0.68/' };
 let fragmentBytes: ArrayBuffer | null = null;
-let onConversionFinish = () => {};
+let onConversionFinish = () => {
+  document.getElementById('loading')!.style.display = 'none';
+};
 
-export const convertIFC = async (file: File): Promise<IfcData | null> => {
+async function convertIFC(file: File): Promise<FRAGS.FragmentsModel | null> {
   const ifcBuffer = await file.arrayBuffer();
 
   const ifcBytes = new Uint8Array(ifcBuffer);
@@ -645,7 +640,14 @@ export const convertIFC = async (file: File): Promise<IfcData | null> => {
   fragmentBytes = await serializer.process({ bytes: ifcBytes });
   const modelId = file.name.replace('.ifc', '');
   if (!fragmentBytes) return null;
+
   const model = await fragments.load(fragmentBytes, { modelId });
+  return model;
+}
+
+const getMapConversionData = async (
+  model: FRAGS.FragmentsModel
+): Promise<IfcData | null> => {
   const ifcMapConversion = await model.getItemsOfCategory('IFCMAPCONVERSION');
 
   const localIds = (
@@ -674,8 +676,6 @@ export const convertIFC = async (file: File): Promise<IfcData | null> => {
     }
   }
 
-  console.log('Map Conversion Data: ', mapConversionValues);
-
   const rotation = ifcDirectionToDegrees(
     mapConversionValues.XAxisAbscissa,
     mapConversionValues.XAxisOrdinate
@@ -697,34 +697,3 @@ export function ifcDirectionToDegrees(
   const degrees = (Math.atan2(XAxisOrdinate, XAxisAbscissa) * 180) / Math.PI;
   return (degrees + 360) % 360; // Normalize to 0-360
 }
-
-/*
-function getRotation(ifcLines: string[]): number | null {
-  const contextRegex =
-    /#\d+=IFCGEOMETRICREPRESENTATIONCONTEXT\([^,]+,[^,]+,[^,]+,[^,]+,[^,]+,(#[\d]+)\)/;
-
-  const contextLine = ifcLines.find((line) => contextRegex.test(line));
-  if (!contextLine) return null;
-
-  const match = contextLine.match(contextRegex);
-  if (!match || match.length < 2) return null;
-
-  const directionId = match[1]; // Extract the direction ID (e.g., #71)
-  const directionLine = ifcLines.find((line) =>
-    line.startsWith(`${directionId}=`)
-  );
-  if (!directionLine) return null;
-
-  const directionRegex = /IFCDIRECTION\(\((-?[\d.]+),(-?[\d.]+)\)\)/;
-  const directionMatch = directionLine.match(directionRegex);
-  if (!directionMatch || directionMatch.length < 3) return null;
-
-  const x = parseFloat(directionMatch[1]);
-  const y = parseFloat(directionMatch[2]);
-
-  const rotation =
-    ifcDirectionToDegrees({ DirectionRatios: [x, y] }).degrees ?? 0;
-
-  return rotation;
-}
-  */
