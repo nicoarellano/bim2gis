@@ -618,13 +618,7 @@ proj4.defs(
 );
 
 const serializer = new FRAGS.IfcImporter();
-serializer.classes.abstract.add(
-  WEBIFC.IFCSITE,
-  WEBIFC.IFCMAPCONVERSION,
-  WEBIFC.IFCGEOMETRICREPRESENTATIONCONTEXT,
-  WEBIFC.IFCPROJECTEDCRS
-);
-serializer.attributesToExclude.add('IFCDOOR');
+serializer.classes.abstract.add(WEBIFC.IFCMAPCONVERSION);
 
 serializer.wasm = { absolute: true, path: 'https://unpkg.com/web-ifc@0.0.68/' };
 let fragmentBytes: ArrayBuffer | null = null;
@@ -649,6 +643,7 @@ const getMapConversionData = async (
   model: FRAGS.FragmentsModel
 ): Promise<IfcData | null> => {
   const ifcMapConversion = await model.getItemsOfCategory('IFCMAPCONVERSION');
+  if (ifcMapConversion.length === 0) return { model };
 
   const localIds = (
     await Promise.all(ifcMapConversion.map((item) => item.getLocalId()))
