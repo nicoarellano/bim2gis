@@ -425,7 +425,7 @@ async function loadModelToMap(coords: Coords) {
       dynamicAltitude = altitudeNumber;
       const terrainElevation = maplibre.queryTerrainElevation(coords) ?? 0;
       const altitude = terrainElevation + dynamicAltitude;
-      altitudeLabel.textContent = terrainElevation.toFixed(2).toString();
+      altitudeLabel.textContent = altitude.toFixed(2).toString();
 
       const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(
         sceneOrigin,
