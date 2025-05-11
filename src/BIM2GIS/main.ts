@@ -498,6 +498,7 @@ async function loadModelToMap(coords: Coords) {
         .setHTML(description as string)
         .addTo(maplibre);
     }
+    maplibre.getCanvas().style.cursor = '';
   });
 
   maplibre.on('click', 'places-layer', (e) => {
@@ -536,6 +537,13 @@ maplibre.on('dblclick', (e) => {
     maplibre.getCanvas().style.cursor = '';
 
     holdPopup = false;
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    holdPopup = false;
+    maplibre.getCanvas().style.cursor = '';
   }
 });
 
