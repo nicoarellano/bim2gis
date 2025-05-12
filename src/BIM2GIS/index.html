@@ -103,6 +103,13 @@
         />
         <label class="input-label" id="altitude-label">
           IFC elev: <span id="altitude">0</span> mts
+          <input
+            type="number"
+            id="altitude-input"
+            value="0"
+            placeholder="0"
+            oninput="document.getElementById('altitude').textContent = this.value"
+          />
         </label>
         <input
           id="altitude-slider"

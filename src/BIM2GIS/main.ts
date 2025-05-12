@@ -155,11 +155,20 @@ const anglelabel = document.getElementById('angle') as HTMLLabelElement;
 const altitudeSlider = document.getElementById(
   'altitude-slider'
 ) as HTMLInputElement;
+const altitudeInput = document.getElementById(
+  'altitude-input'
+) as HTMLInputElement;
+let altitudeInputValue = 0;
+altitudeInput?.addEventListener('input', () => {
+  altitudeInputValue = parseFloat(altitudeInput.value) || 0;
+});
+
 let dynamicAltitude = 0;
 let mapElevation = 0;
 let modelElevation = 0;
 
 const altitudeLabel = document.getElementById('altitude') as HTMLLabelElement;
+
 const modelTools = document.getElementById('model-tools') as HTMLButtonElement;
 const downloadFrag = document.getElementById(
   'download-frag'
@@ -423,9 +432,15 @@ async function loadModelToMap(coords: Coords) {
       const altitudeValue = altitudeSlider.value;
       const altitudeNumber = parseFloat(altitudeValue);
       dynamicAltitude = altitudeNumber;
+
       const terrainElevation = maplibre.queryTerrainElevation(coords) ?? 0;
-      const altitude = terrainElevation + dynamicAltitude;
+      let altitude = terrainElevation + dynamicAltitude;
+      if (altitudeInputValue) altitude = altitudeInputValue;
+
       altitudeLabel.textContent = altitude.toFixed(2).toString();
+      altitudeInput?.addEventListener('input', () => {
+        altitude = parseFloat(altitudeInput.value) || 0;
+      });
 
       const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(
         sceneOrigin,
